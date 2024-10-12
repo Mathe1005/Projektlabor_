@@ -23,7 +23,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 public class RegisterActivity extends AppCompatActivity {
-    EditText usernameEditText, passwordEditText;
+    EditText usernameEditText, passwordEditText, passwordRepeatEditText;
     Button signUpButton;
     TextView loginText;
     FirebaseAuth mAuth;
@@ -39,6 +39,7 @@ public class RegisterActivity extends AppCompatActivity {
 
         usernameEditText = findViewById(R.id.username);
         passwordEditText = findViewById(R.id.password);
+        passwordRepeatEditText = findViewById(R.id.password2);  // Új jelszó ellenőrző mező
         signUpButton = findViewById(R.id.loginButton);
         loginText = findViewById(R.id.signupText);
 
@@ -76,12 +77,20 @@ public class RegisterActivity extends AppCompatActivity {
     private void registerUser() {
         String email = usernameEditText.getText().toString().trim();
         String password = passwordEditText.getText().toString().trim();
+        String repeatPassword = passwordRepeatEditText.getText().toString().trim();  // Második jelszó beolvasása
 
-        if (email.isEmpty() || password.isEmpty()) {
+        if (email.isEmpty() || password.isEmpty() || repeatPassword.isEmpty()) {
             Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        // Ellenőrizzük, hogy a két jelszó egyezik-e
+        if (!password.equals(repeatPassword)) {
+            Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Ha a jelszavak egyeznek, folytathatjuk a regisztrációt
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override

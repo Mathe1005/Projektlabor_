@@ -19,8 +19,11 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class MainActivity extends AppCompatActivity {
     EditText username;
@@ -46,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                loginUser();
+                checkIfEmailExistsAndLogin();
             }
         });
 
@@ -73,15 +76,38 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void loginUser() {
-        String email = username.getText().toString().trim();
-        String pass = password.getText().toString().trim();
+    private void checkIfEmailExistsAndLogin() {
+        final String email = username.getText().toString().trim();
+        final String pass = password.getText().toString().trim();
 
         if (email.isEmpty() || pass.isEmpty()) {
             Toast.makeText(MainActivity.this, "Please fill all fields", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        // Ellenőrizzük, hogy az e-mail cím létezik-e az adatbázisban
+        mDatabase.child("users").orderByChild("email").equalTo(email)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.exists()) {
+                            // Ha az email már létezik
+                            Toast.makeText(MainActivity.this, "Email already registered.", Toast.LENGTH_SHORT).show();
+                        } else {
+                            // Ha az email nem létezik, regisztrálhatunk
+                            loginUser(email, pass);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        // Hiba történt az adatbázis lekérdezése során
+                        Toast.makeText(MainActivity.this, "Database error.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void loginUser(String email, String pass) {
         mAuth.signInWithEmailAndPassword(email, pass)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
@@ -94,8 +120,7 @@ public class MainActivity extends AppCompatActivity {
                             finish();
 
                         } else {
-                            Toast.makeText(MainActivity.this, "Authentication failed.",
-                                    Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
@@ -106,6 +131,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
+            // A felhasználó már be van jelentkezve
         }
     }
 }
