@@ -73,6 +73,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/top_buttons_card" />
 
+
+
     <LinearLayout
         android:id="@+id/bottom_navigation"
         android:layout_width="match_parent"
