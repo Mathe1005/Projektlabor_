@@ -85,26 +85,13 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // Ellenőrizzük, hogy az e-mail cím létezik-e az adatbázisban
-        mDatabase.child("users").orderByChild("email").equalTo(email)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.exists()) {
-                            // Ha az email már létezik
-                            Toast.makeText(MainActivity.this, "Email already registered.", Toast.LENGTH_SHORT).show();
-                        } else {
-                            // Ha az email nem létezik, regisztrálhatunk
-                            loginUser(email, pass);
-                        }
-                    }
+        // A felhasználónak a bejelentkezéshez nem kell ellenőrizni az email létezését
+        loginUser(email, pass);
 
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        // Hiba történt az adatbázis lekérdezése során
-                        Toast.makeText(MainActivity.this, "Database error.", Toast.LENGTH_SHORT).show();
-                    }
-                });
+
+
+    // Ellenőrizzük, hogy az e-mail cím létezik-e az adatbázisban
+
     }
 
     private void loginUser(String email, String pass) {

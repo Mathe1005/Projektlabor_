@@ -19,8 +19,11 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class RegisterActivity extends AppCompatActivity {
     EditText usernameEditText, passwordEditText, passwordRepeatEditText;
@@ -77,7 +80,7 @@ public class RegisterActivity extends AppCompatActivity {
     private void registerUser() {
         String email = usernameEditText.getText().toString().trim();
         String password = passwordEditText.getText().toString().trim();
-        String repeatPassword = passwordRepeatEditText.getText().toString().trim();  // Második jelszó beolvasása
+        String repeatPassword = passwordRepeatEditText.getText().toString().trim();
 
         if (email.isEmpty() || password.isEmpty() || repeatPassword.isEmpty()) {
             Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
@@ -90,22 +93,40 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        // Ha a jelszavak egyeznek, folytathatjuk a regisztrációt
-        mAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+        // Ellenőrizzük, hogy az email már létezik-e az adatbázisban
+        mDatabase.child("users").orderByChild("email").equalTo(email)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(RegisterActivity.this, "Registration Successful!", Toast.LENGTH_SHORT).show();
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            saveUserToDatabase(user);
-                            Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
-                            startActivity(intent);
-                            finish();
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.exists()) {
+                            // Ha az email már létezik
+                            Toast.makeText(RegisterActivity.this, "Email already registered.", Toast.LENGTH_SHORT).show();
                         } else {
-                            Toast.makeText(RegisterActivity.this, "Registration failed: " + task.getException().getMessage(),
-                                    Toast.LENGTH_SHORT).show();
+                            // Ha az email nem létezik, regisztrálhatunk
+                            mAuth.createUserWithEmailAndPassword(email, password)
+                                    .addOnCompleteListener(RegisterActivity.this, new OnCompleteListener<AuthResult>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<AuthResult> task) {
+                                            if (task.isSuccessful()) {
+                                                Toast.makeText(RegisterActivity.this, "Registration Successful!", Toast.LENGTH_SHORT).show();
+                                                FirebaseUser user = mAuth.getCurrentUser();
+                                                saveUserToDatabase(user);
+                                                Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
+                                                startActivity(intent);
+                                                finish();
+                                            } else {
+                                                Toast.makeText(RegisterActivity.this, "Registration failed: " + task.getException().getMessage(),
+                                                        Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    });
                         }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        // Hiba történt az adatbázis lekérdezése során
+                        Toast.makeText(RegisterActivity.this, "Database error.", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
