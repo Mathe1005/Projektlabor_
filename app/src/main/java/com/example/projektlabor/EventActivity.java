@@ -4,12 +4,14 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -19,13 +21,26 @@ public class EventActivity extends AppCompatActivity {
     private DatabaseReference mDatabase;
     private FirebaseAuth mAuth;
 
-    private EditText eventNameEditText, eventLocationEditText, eventTimeEditText;
-    private Button createEventButton;
+    private TextInputEditText eventNameEditText, eventLocationEditText, eventTimeEditText;
+    private MaterialButton createEventButton;
+    private ImageView backButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.event);
+
+        // Toolbar beállítása
+        backButton = findViewById(R.id.back_button);
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
+
+        TextView toolbarTitle = findViewById(R.id.toolbar_title);
+        toolbarTitle.setText("Create Event");
 
         mDatabase = FirebaseDatabase.getInstance().getReference("events");
         mAuth = FirebaseAuth.getInstance();
@@ -38,17 +53,9 @@ public class EventActivity extends AppCompatActivity {
         createEventButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 createEvent();
             }
         });
-
-    }
-
-    public void onBackButtonClick(View view) {
-        Intent intent = new Intent(EventActivity.this, HomeActivity.class);
-        startActivity(intent);
-        finish(); // Bezárjuk az EventActivity-t
     }
 
     private void createEvent() {

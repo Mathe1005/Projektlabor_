@@ -5,6 +5,7 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -33,6 +34,15 @@ public class EditEventActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_event);
+
+        // Handling the back button in the custom LinearLayout toolbar
+        ImageView backButton = findViewById(R.id.back_button);
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed(); // This will mimic the behavior of the previous toolbar's back button
+            }
+        });
 
         mDatabase = FirebaseDatabase.getInstance().getReference("events");
         mAuth = FirebaseAuth.getInstance();

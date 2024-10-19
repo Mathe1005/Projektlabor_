@@ -21,6 +21,7 @@
         <item name="cardCornerRadius">12dp</item>
         <item name="cardElevation">4dp</item>
         <item name="contentPadding">16dp</item>
+        <item name="cardBackgroundColor">@android:color/white</item>
     </style>
 
     <!-- Text style for titles -->
@@ -34,5 +35,9 @@
     <style name="SubtitleText">
         <item name="android:textSize">18sp</item>
         <item name="android:textColor">@color/secondaryTextColor</item>
+    </style>
+
+    <style name="ToolbarTitleStyle" parent="TextAppearance.MaterialComponents.Headline6">
+        <item name="android:textSize">20sp</item>
     </style>
 </resources>
