@@ -100,7 +100,7 @@
     <LinearLayout
         android:id="@+id/bottom_navigation"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="35dp"
         android:orientation="horizontal"
         android:background="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -121,16 +121,11 @@
                 android:layout_height="24dp"
                 android:src="@drawable/ic_home"/>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Home"
-                android:textSize="14sp"
-                android:textStyle="bold"/>
+
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/nav_search"
+            android:id="@+id/nav_calendar"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -141,14 +136,9 @@
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/ic_search"/>
+                android:src="@drawable/ic_calendar"/>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Search"
-                android:textSize="14sp"
-                android:textStyle="bold"/>
+
         </LinearLayout>
 
         <LinearLayout
@@ -164,13 +154,6 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_profile"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Profile"
-                android:textSize="14sp"
-                android:textStyle="bold"/>
         </LinearLayout>
     </LinearLayout>
 
