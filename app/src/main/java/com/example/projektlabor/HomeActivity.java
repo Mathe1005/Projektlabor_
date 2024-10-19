@@ -1,5 +1,8 @@
 package com.example.projektlabor;
 
+import android.app.Dialog;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,6 +22,8 @@ import java.util.List;
 import com.google.android.material.button.MaterialButton;
 import android.content.Intent;
 import android.view.View;
+import android.view.Window;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 import android.widget.TextView;
@@ -91,7 +96,7 @@ public class HomeActivity extends AppCompatActivity {
 
             @Override
             public void onDeleteClick(EventActivity.Event event) {
-                deleteEvent(event);
+                showDeleteConfirmationDialog(event);
             }
         };
 
@@ -154,6 +159,38 @@ public class HomeActivity extends AppCompatActivity {
             otherEventsTitle.setVisibility(View.VISIBLE);
             recyclerViewOtherEvents.setVisibility(View.VISIBLE);
         }
+    }
+
+    private void showDeleteConfirmationDialog(final EventActivity.Event event) {
+        final Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_confirm_delete);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        TextView titleText = dialog.findViewById(R.id.dialog_title);
+        TextView messageText = dialog.findViewById(R.id.dialog_message);
+        Button yesButton = dialog.findViewById(R.id.btn_yes);
+        Button noButton = dialog.findViewById(R.id.btn_no);
+
+        titleText.setText("Confirm Deletion");
+        messageText.setText("Are you sure you want to delete this event?");
+
+        yesButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                deleteEvent(event);
+                dialog.dismiss();
+            }
+        });
+
+        noButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+
+        dialog.show();
     }
 
     private void deleteEvent(EventActivity.Event event) {
