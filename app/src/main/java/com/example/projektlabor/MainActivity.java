@@ -89,9 +89,6 @@ public class MainActivity extends AppCompatActivity {
         loginUser(email, pass);
 
 
-
-    // Ellenőrizzük, hogy az e-mail cím létezik-e az adatbázisban
-
     }
 
     private void loginUser(String email, String pass) {

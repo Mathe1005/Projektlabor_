@@ -14,9 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import com.google.android.material.button.MaterialButton;
 import android.content.Intent;
-import android.os.Bundle;
 import android.view.View;
-import androidx.appcompat.app.AppCompatActivity;
+import android.widget.LinearLayout;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -40,6 +39,18 @@ public class HomeActivity extends AppCompatActivity {
                 // Átirányítás az EventActivity-re
                 Intent intent = new Intent(HomeActivity.this, EventActivity.class);
                 startActivity(intent);
+            }
+        });
+
+        // Hivatkozás a home ikonra
+        LinearLayout navHome = findViewById(R.id.nav_home);
+
+        // OnClickListener hozzáadása a home ikonhoz
+        navHome.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Mivel már a HomeActivity-n vagyunk, csak frissítjük az Activity-t
+                recreate();
             }
         });
 
