@@ -9,12 +9,15 @@ import android.widget.EditText;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 public class EventActivity extends AppCompatActivity {
 
     private DatabaseReference mDatabase;
+    private FirebaseAuth mAuth;
 
     private EditText eventNameEditText, eventLocationEditText, eventTimeEditText;
     private Button createEventButton;
@@ -25,6 +28,7 @@ public class EventActivity extends AppCompatActivity {
         setContentView(R.layout.event);
 
         mDatabase = FirebaseDatabase.getInstance().getReference("events");
+        mAuth = FirebaseAuth.getInstance();
 
         eventNameEditText = findViewById(R.id.event_name);
         eventLocationEditText = findViewById(R.id.event_location);
@@ -34,6 +38,7 @@ public class EventActivity extends AppCompatActivity {
         createEventButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 createEvent();
             }
         });
@@ -65,8 +70,9 @@ public class EventActivity extends AppCompatActivity {
         }
 
         String eventId = mDatabase.push().getKey();
+        String creatorId = mAuth.getCurrentUser().getUid();
 
-        Event event = new Event(eventId, eventName, eventLocation, eventTime);
+        Event event = new Event(eventId, eventName, eventLocation, eventTime, creatorId);
 
         if (eventId != null) {
             mDatabase.child(eventId).setValue(event).addOnCompleteListener(task -> {
@@ -87,14 +93,16 @@ public class EventActivity extends AppCompatActivity {
         public String eventName;
         public String eventLocation;
         public String eventTime;
+        public String creatorId;
 
         public Event() {}
 
-        public Event(String eventId, String eventName, String eventLocation, String eventTime) {
+        public Event(String eventId, String eventName, String eventLocation, String eventTime, String creatorId) {
             this.eventId = eventId;
             this.eventName = eventName;
             this.eventLocation = eventLocation;
             this.eventTime = eventTime;
+            this.creatorId = creatorId;
         }
     }
 }

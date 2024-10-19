@@ -5,6 +5,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -16,6 +18,7 @@ import com.google.android.material.button.MaterialButton;
 import android.content.Intent;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -23,11 +26,15 @@ public class HomeActivity extends AppCompatActivity {
     private EventAdapter eventAdapter;
     private List<EventActivity.Event> eventList;
     private DatabaseReference mDatabase;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.home);
+
+        mAuth = FirebaseAuth.getInstance();
+        mDatabase = FirebaseDatabase.getInstance().getReference("events");
 
         // Hivatkozás az "Add New Event" gombra
         MaterialButton btnAddEvent = findViewById(R.id.btn_add_event);
@@ -60,27 +67,40 @@ public class HomeActivity extends AppCompatActivity {
 
         // Esemény lista inicializálása
         eventList = new ArrayList<>();
-        eventAdapter = new EventAdapter(eventList);
+        eventAdapter = new EventAdapter(eventList, new EventAdapter.OnEventClickListener() {
+            @Override
+            public void onEventClick(EventActivity.Event event) {
+                if (event.creatorId.equals(mAuth.getCurrentUser().getUid())) {
+                    Intent intent = new Intent(HomeActivity.this, EditEventActivity.class);
+                    intent.putExtra("EVENT_ID", event.eventId);
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(HomeActivity.this, "You can only edit events you created", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
         recyclerViewEvents.setAdapter(eventAdapter);
 
-        // Firebase adatbázis referencia
-        mDatabase = FirebaseDatabase.getInstance().getReference("events");
+        loadEvents();
+    }
 
-        // Események lekérése Firebase-ből
+    private void loadEvents() {
         mDatabase.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 eventList.clear();
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     EventActivity.Event event = snapshot.getValue(EventActivity.Event.class);
-                    eventList.add(event);
+                    if (event != null) {
+                        eventList.add(event);
+                    }
                 }
                 eventAdapter.notifyDataSetChanged();
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-                // Hibakezelés
+                Toast.makeText(HomeActivity.this, "Failed to load events: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }

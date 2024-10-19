@@ -11,9 +11,15 @@ import java.util.List;
 public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHolder> {
 
     private List<EventActivity.Event> eventList;
+    private OnEventClickListener listener;
 
-    public EventAdapter(List<EventActivity.Event> eventList) {
+    public interface OnEventClickListener {
+        void onEventClick(EventActivity.Event event);
+    }
+
+    public EventAdapter(List<EventActivity.Event> eventList, OnEventClickListener listener) {
         this.eventList = eventList;
+        this.listener = listener;
     }
 
     @NonNull
@@ -26,9 +32,7 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
     @Override
     public void onBindViewHolder(@NonNull EventViewHolder holder, int position) {
         EventActivity.Event event = eventList.get(position);
-        holder.eventName.setText(event.eventName);
-        holder.eventLocation.setText(event.eventLocation);
-        holder.eventTime.setText(event.eventTime);
+        holder.bind(event, listener);
     }
 
     @Override
@@ -44,6 +48,19 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
             eventName = itemView.findViewById(R.id.text_event_name);
             eventLocation = itemView.findViewById(R.id.text_event_location);
             eventTime = itemView.findViewById(R.id.text_event_time);
+        }
+
+        public void bind(final EventActivity.Event event, final OnEventClickListener listener) {
+            eventName.setText(event.eventName);
+            eventLocation.setText(event.eventLocation);
+            eventTime.setText(event.eventTime);
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    listener.onEventClick(event);
+                }
+            });
         }
     }
 }
