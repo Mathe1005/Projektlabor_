@@ -64,6 +64,15 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
 
+        LinearLayout navCalendar = findViewById(R.id.nav_calendar);
+        navCalendar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(HomeActivity.this, CalendarActivity.class);
+                startActivity(intent);
+            }
+        });
+
         LinearLayout navProfile = findViewById(R.id.nav_profile);
         navProfile.setOnClickListener(new View.OnClickListener() {
             @Override

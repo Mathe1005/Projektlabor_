@@ -27,7 +27,8 @@
         <activity android:name=".EventActivity" />
         <activity android:name=".EditEventActivity" />
         <activity android:name=".EventAdapter" />
-        <activity android:name=".ProfileActivity" />
+        <activity android:name=".ProfileActivity"/>
+        <activity android:name=".CalendarActivity"/>
 
     </application>
 
