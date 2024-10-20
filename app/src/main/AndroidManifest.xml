@@ -29,6 +29,7 @@
         <activity android:name=".EventAdapter" />
         <activity android:name=".ProfileActivity"/>
         <activity android:name=".CalendarActivity"/>
+        <activity android:name=".SearchEventActivity" />
 
     </application>
 

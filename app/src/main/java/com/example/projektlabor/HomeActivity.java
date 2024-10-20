@@ -56,6 +56,15 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
 
+        MaterialButton btnSearchEvent = findViewById(R.id.btn_search_event);
+        btnSearchEvent.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(HomeActivity.this, SearchEventActivity.class);
+                startActivity(intent);
+            }
+        });
+
         LinearLayout navHome = findViewById(R.id.nav_home);
         navHome.setOnClickListener(new View.OnClickListener() {
             @Override
