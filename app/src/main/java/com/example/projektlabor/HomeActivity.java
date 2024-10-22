@@ -47,55 +47,26 @@ public class HomeActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference("events");
 
+        initializeViews();
+        setupEventLists();
+        setupBottomNavigation();
+        loadEvents();
+    }
+
+    private void initializeViews() {
         MaterialButton btnAddEvent = findViewById(R.id.btn_add_event);
-        btnAddEvent.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(HomeActivity.this, EventActivity.class);
-                startActivity(intent);
-            }
-        });
+        btnAddEvent.setOnClickListener(v -> startActivity(new Intent(HomeActivity.this, EventActivity.class)));
 
         MaterialButton btnSearchEvent = findViewById(R.id.btn_search_event);
-        btnSearchEvent.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(HomeActivity.this, SearchEventActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        LinearLayout navHome = findViewById(R.id.nav_home);
-        navHome.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                recreate();
-            }
-        });
-
-        LinearLayout navCalendar = findViewById(R.id.nav_calendar);
-        navCalendar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(HomeActivity.this, CalendarActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        LinearLayout navProfile = findViewById(R.id.nav_profile);
-        navProfile.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(HomeActivity.this, ProfileActivity.class);
-                startActivity(intent);
-            }
-        });
+        btnSearchEvent.setOnClickListener(v -> startActivity(new Intent(HomeActivity.this, SearchEventActivity.class)));
 
         recyclerViewUserEvents = findViewById(R.id.recycler_view_user_events);
         recyclerViewOtherEvents = findViewById(R.id.recycler_view_other_events);
         recyclerViewUserEvents.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewOtherEvents.setLayoutManager(new LinearLayoutManager(this));
+    }
 
+    private void setupEventLists() {
         userEventList = new ArrayList<>();
         otherEventList = new ArrayList<>();
 
@@ -123,8 +94,20 @@ public class HomeActivity extends AppCompatActivity {
 
         recyclerViewUserEvents.setAdapter(userEventAdapter);
         recyclerViewOtherEvents.setAdapter(otherEventAdapter);
+    }
 
-        loadEvents();
+    private void setupBottomNavigation() {
+        LinearLayout navHome = findViewById(R.id.nav_home);
+        navHome.setOnClickListener(v -> recreate());
+
+        LinearLayout navCalendar = findViewById(R.id.nav_calendar);
+        navCalendar.setOnClickListener(v -> startActivity(new Intent(HomeActivity.this, CalendarActivity.class)));
+
+        LinearLayout navFriends = findViewById(R.id.nav_friends);
+        navFriends.setOnClickListener(v -> startActivity(new Intent(HomeActivity.this, FriendsActivity.class)));
+
+        LinearLayout navProfile = findViewById(R.id.nav_profile);
+        navProfile.setOnClickListener(v -> startActivity(new Intent(HomeActivity.this, ProfileActivity.class)));
     }
 
     private void loadEvents() {
@@ -193,33 +176,22 @@ public class HomeActivity extends AppCompatActivity {
         titleText.setText("Confirm Deletion");
         messageText.setText("Are you sure you want to delete this event?");
 
-        yesButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                deleteEvent(event);
-                dialog.dismiss();
-            }
+        yesButton.setOnClickListener(v -> {
+            deleteEvent(event);
+            dialog.dismiss();
         });
 
-        noButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dialog.dismiss();
-            }
-        });
+        noButton.setOnClickListener(v -> dialog.dismiss());
 
         dialog.show();
     }
 
     private void deleteEvent(EventActivity.Event event) {
-        mDatabase.child(event.eventId).removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                if (task.isSuccessful()) {
-                    Toast.makeText(HomeActivity.this, "Event deleted successfully", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(HomeActivity.this, "Failed to delete event: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                }
+        mDatabase.child(event.eventId).removeValue().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Toast.makeText(HomeActivity.this, "Event deleted successfully", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(HomeActivity.this, "Failed to delete event: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }

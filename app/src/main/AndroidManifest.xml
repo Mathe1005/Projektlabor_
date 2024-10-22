@@ -30,6 +30,8 @@
         <activity android:name=".ProfileActivity"/>
         <activity android:name=".CalendarActivity"/>
         <activity android:name=".SearchEventActivity" />
+        <activity android:name=".FriendsActivity" />
+        <activity android:name=".FriendAdapter" />
 
     </application>
 
