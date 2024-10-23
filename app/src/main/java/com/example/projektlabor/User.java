@@ -10,7 +10,6 @@ public class User {
     private Map<String, Boolean> friends;
 
     public User() {
-        // Default constructor required for calls to DataSnapshot.getValue(User.class)
     }
 
     public User(String userId, String username, String email) {
@@ -20,7 +19,6 @@ public class User {
         this.friends = new HashMap<>();
     }
 
-    // Getters and Setters
     public String getUserId() { return userId; }
     public void setUserId(String userId) { this.userId = userId; }
 
@@ -33,7 +31,6 @@ public class User {
     public Map<String, Boolean> getFriends() { return friends; }
     public void setFriends(Map<String, Boolean> friends) { this.friends = friends; }
 
-    // Helper method for adding a friend
     public void addFriend(String friendId) {
         if (friends == null) {
             friends = new HashMap<>();

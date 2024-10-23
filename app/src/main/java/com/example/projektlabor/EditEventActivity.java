@@ -39,7 +39,7 @@ public class EditEventActivity extends AppCompatActivity {
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onBackPressed(); // This will mimic the behavior of the previous toolbar's back button
+                onBackPressed();
             }
         });
 

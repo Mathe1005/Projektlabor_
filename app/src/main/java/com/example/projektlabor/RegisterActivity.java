@@ -41,7 +41,7 @@ public class RegisterActivity extends AppCompatActivity {
         passwordEditText = findViewById(R.id.password);
         passwordRepeatEditText = findViewById(R.id.password2);
         signUpButton = findViewById(R.id.loginButton);
-        loginText = findViewById(R.id.loginText);  // Változás itt: signupText helyett loginText
+        loginText = findViewById(R.id.loginText);
 
         signUpButton.setOnClickListener(v -> registerUser());
 
@@ -114,6 +114,7 @@ public class RegisterActivity extends AppCompatActivity {
         String userId = user.getUid();
         String email = user.getEmail();
 
-        mDatabase.child("users").child(userId).child("email").setValue(email);
+        User newUser = new User(userId, email, email);
+        mDatabase.child("users").child(userId).setValue(newUser);
     }
 }
