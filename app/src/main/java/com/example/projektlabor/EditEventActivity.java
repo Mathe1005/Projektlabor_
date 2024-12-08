@@ -214,7 +214,7 @@ public class EditEventActivity extends AppCompatActivity {
                 newLocation,
                 newTime,
                 currentEvent.creatorId,
-                currentEvent.creatorEmail,
+                currentEvent.creatorUsername,  // megtartjuk az eredeti létrehozó felhasználónevét
                 newSportCategory,
                 newMaxParticipants,
                 newDescription,

@@ -73,7 +73,7 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
             eventName.setText(event.eventName);
             eventLocation.setText(event.eventLocation);
             eventTime.setText(event.eventTime);
-            creatorEmail.setText("Created by: " + event.creatorEmail);
+            creatorEmail.setText("Created by: " + event.creatorUsername);  // email helyett username
             sportCategory.setText("Sport: " + event.sportCategory);
             description.setText(event.description);
             startTime.setText("Starts at: " + event.startTime);

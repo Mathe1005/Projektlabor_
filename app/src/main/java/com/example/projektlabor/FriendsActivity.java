@@ -104,9 +104,9 @@ public class FriendsActivity extends AppCompatActivity {
 
     private void setupClickListeners() {
         btnAddFriend.setOnClickListener(v -> {
-            String friendEmail = editTextFriendEmail.getText().toString().trim();
-            if (validateEmail(friendEmail)) {
-                sendFriendRequest(friendEmail);
+            String friendUsername = editTextFriendEmail.getText().toString().trim();
+            if (validateUsername(friendUsername)) {
+                sendFriendRequest(friendUsername);
             }
         });
 
@@ -119,21 +119,15 @@ public class FriendsActivity extends AppCompatActivity {
         });
     }
 
-    private boolean validateEmail(String email) {
-        if (TextUtils.isEmpty(email)) {
-            editTextFriendEmail.setError("Please enter an email address");
+    private boolean validateUsername(String username) {
+        if (TextUtils.isEmpty(username)) {
+            editTextFriendEmail.setError("Please enter a username");
             editTextFriendEmail.requestFocus();
             return false;
         }
 
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            editTextFriendEmail.setError("Please enter a valid email address");
-            editTextFriendEmail.requestFocus();
-            return false;
-        }
-
-        String currentUserEmail = mAuth.getCurrentUser().getEmail();
-        if (email.equals(currentUserEmail)) {
+        String currentUsername = mAuth.getCurrentUser().getDisplayName();
+        if (username.equals(currentUsername)) {
             editTextFriendEmail.setError("You cannot add yourself");
             editTextFriendEmail.requestFocus();
             return false;
@@ -142,13 +136,13 @@ public class FriendsActivity extends AppCompatActivity {
         return true;
     }
 
-    private void sendFriendRequest(String friendEmail) {
+    private void sendFriendRequest(String friendUsername) {
         showProgress();
         String currentUserId = mAuth.getCurrentUser().getUid();
         String currentUserEmail = mAuth.getCurrentUser().getEmail();
         String currentUsername = mAuth.getCurrentUser().getDisplayName();
 
-        usersRef.orderByChild("email").equalTo(friendEmail)
+        usersRef.orderByChild("username").equalTo(friendUsername)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -198,6 +192,7 @@ public class FriendsActivity extends AppCompatActivity {
                     }
                 });
     }
+
 
     private void acceptFriendRequest(FriendRequest request) {
         showProgress();

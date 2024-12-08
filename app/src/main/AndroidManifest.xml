@@ -32,6 +32,8 @@
         <activity android:name=".SearchEventActivity" />
         <activity android:name=".FriendsActivity" />
         <activity android:name=".FriendAdapter" />
+        <activity android:name=".SetUsernameActivity" />
+        <activity android:name=".FilteredEventsActivity" />
 
     </application>
 

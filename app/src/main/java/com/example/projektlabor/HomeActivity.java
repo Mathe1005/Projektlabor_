@@ -172,7 +172,7 @@ public class HomeActivity extends AppCompatActivity {
         descriptionText.setText(event.description);
         sportCategoryText.setText("Sport: " + event.sportCategory);
         startTimeText.setText("Starts at: " + event.startTime);
-        creatorText.setText("Created by: " + event.creatorEmail);
+        creatorText.setText("Created by: " + event.creatorUsername);
 
         int participantCount = event.participants != null ? event.participants.size() : 0;
         participantsText.setText(String.format("%d/%d participants",

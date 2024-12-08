@@ -101,7 +101,9 @@ public class RegisterActivity extends AppCompatActivity {
                             Toast.makeText(RegisterActivity.this, "Registration Successful!", Toast.LENGTH_SHORT).show();
                             FirebaseUser user = mAuth.getCurrentUser();
                             saveUserToDatabase(user);
-                            navigateToLogin();
+                            Intent intent = new Intent(RegisterActivity.this, SetUsernameActivity.class);
+                            startActivity(intent);
+                            finish();
                         } else {
                             Toast.makeText(RegisterActivity.this, "Registration failed: " + task.getException().getMessage(),
                                     Toast.LENGTH_SHORT).show();

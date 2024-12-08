@@ -62,7 +62,6 @@ public class EventActivity extends AppCompatActivity {
         startTimeEditText = findViewById(R.id.event_start_time);
         createEventButton = findViewById(R.id.create_event_button);
 
-        // Dátumválasztó beállítása
         eventTimeEditText.setFocusable(false);
         eventTimeEditText.setOnClickListener(v -> {
             Calendar cal = Calendar.getInstance();
@@ -80,7 +79,6 @@ public class EventActivity extends AppCompatActivity {
             datePickerDialog.show();
         });
 
-        // Időválasztó beállítása
         startTimeEditText.setFocusable(false);
         startTimeEditText.setOnClickListener(v -> {
             Calendar cal = Calendar.getInstance();
@@ -92,7 +90,7 @@ public class EventActivity extends AppCompatActivity {
                     },
                     cal.get(Calendar.HOUR_OF_DAY),
                     cal.get(Calendar.MINUTE),
-                    true // 24 órás formátum
+                    true
             );
             timePickerDialog.show();
         });
@@ -166,10 +164,10 @@ public class EventActivity extends AppCompatActivity {
 
         String eventId = mDatabase.push().getKey();
         String creatorId = mAuth.getCurrentUser().getUid();
-        String creatorEmail = mAuth.getCurrentUser().getEmail();
+        String creatorUsername = mAuth.getCurrentUser().getDisplayName();
 
         Event event = new Event(eventId, eventName, eventLocation, eventTime,
-                creatorId, creatorEmail, sportCategory,
+                creatorId, creatorUsername, sportCategory,
                 maxParticipants, description, startTime);
 
         if (eventId != null) {
@@ -197,7 +195,7 @@ public class EventActivity extends AppCompatActivity {
         public String eventLocation;
         public String eventTime;
         public String creatorId;
-        public String creatorEmail;
+        public String creatorUsername;
         public String sportCategory;
         public int maxParticipants;
         public String description;
@@ -209,14 +207,14 @@ public class EventActivity extends AppCompatActivity {
         }
 
         public Event(String eventId, String eventName, String eventLocation, String eventTime,
-                     String creatorId, String creatorEmail, String sportCategory,
+                     String creatorId, String creatorUsername, String sportCategory,
                      int maxParticipants, String description, String startTime) {
             this.eventId = eventId;
             this.eventName = eventName;
             this.eventLocation = eventLocation;
             this.eventTime = eventTime;
             this.creatorId = creatorId;
-            this.creatorEmail = creatorEmail;
+            this.creatorUsername = creatorUsername;
             this.sportCategory = sportCategory;
             this.maxParticipants = maxParticipants;
             this.description = description;

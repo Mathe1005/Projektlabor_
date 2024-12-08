@@ -74,7 +74,7 @@
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Enter friend's email"
+                        android:hint="Enter friend's username"
                         app:startIconDrawable="@drawable/baseline_person_24"
                         app:errorEnabled="true"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
@@ -83,7 +83,7 @@
                             android:id="@+id/edit_text_friend_email"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:inputType="textEmailAddress"
+                            android:inputType="text"
                             android:maxLines="1"
                             android:imeOptions="actionDone"/>
 
