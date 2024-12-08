@@ -31,7 +31,8 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendView
     @Override
     public void onBindViewHolder(@NonNull FriendViewHolder holder, int position) {
         User friend = friendsList.get(position);
-        holder.textViewUsername.setText(friend.getUsername());
+        holder.textViewUsername.setText(friend.getUsername() != null ? friend.getUsername() : friend.getEmail());
+        holder.textViewEmail.setText(friend.getEmail());
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onFriendClick(friend);
@@ -46,10 +47,12 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendView
 
     static class FriendViewHolder extends RecyclerView.ViewHolder {
         TextView textViewUsername;
+        TextView textViewEmail;
 
         FriendViewHolder(View itemView) {
             super(itemView);
             textViewUsername = itemView.findViewById(R.id.text_view_username);
+            textViewEmail = itemView.findViewById(R.id.text_view_email);
         }
     }
 }

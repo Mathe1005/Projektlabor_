@@ -12,8 +12,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:background="@color/backgroundColor">
+        android:padding="16dp">
 
         <TextView
             android:id="@+id/text_event_name"
@@ -46,6 +45,56 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@id/button_edit_event"/>
 
+        <TextView
+            android:id="@+id/text_creator_email"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="@android:color/black"
+            app:layout_constraintTop_toBottomOf="@id/text_event_time"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/button_edit_event"/>
+
+        <TextView
+            android:id="@+id/text_sport_category"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="@android:color/black"
+            app:layout_constraintTop_toBottomOf="@id/text_creator_email"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/button_edit_event"/>
+
+        <TextView
+            android:id="@+id/text_participants_count"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="@android:color/black"
+            app:layout_constraintTop_toBottomOf="@id/text_sport_category"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/button_edit_event"/>
+
+        <TextView
+            android:id="@+id/text_description"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="@android:color/black"
+            app:layout_constraintTop_toBottomOf="@id/text_participants_count"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/button_edit_event"/>
+
+        <TextView
+            android:id="@+id/text_start_time"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="@android:color/black"
+            app:layout_constraintTop_toBottomOf="@id/text_description"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/button_edit_event"/>
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_edit_event"
             android:layout_width="wrap_content"
@@ -71,5 +120,19 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="8dp"/>
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_join_event"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Join Event"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            style="@style/SportButton"
+            app:backgroundTint="@color/primaryColor"
+            app:layout_constraintTop_toBottomOf="@id/button_delete_event"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="8dp"/>
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>
+

@@ -1,10 +1,13 @@
 package com.example.projektlabor;
 
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -13,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -20,12 +24,16 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.Calendar;
+
 public class EditEventActivity extends AppCompatActivity {
 
     private DatabaseReference mDatabase;
     private FirebaseAuth mAuth;
 
-    private EditText eventNameEditText, eventLocationEditText, eventTimeEditText;
+    private TextInputEditText eventNameEditText, eventLocationEditText, eventTimeEditText;
+    private TextInputEditText maxParticipantsEditText, descriptionEditText, startTimeEditText;
+    private AutoCompleteTextView sportCategorySpinner;
     private Button updateEventButton;
     private String eventId;
     private EventActivity.Event currentEvent;
@@ -36,20 +44,13 @@ public class EditEventActivity extends AppCompatActivity {
         setContentView(R.layout.activity_edit_event);
 
         ImageView backButton = findViewById(R.id.back_button);
-        backButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onBackPressed();
-            }
-        });
+        backButton.setOnClickListener(v -> onBackPressed());
 
         mDatabase = FirebaseDatabase.getInstance().getReference("events");
         mAuth = FirebaseAuth.getInstance();
 
-        eventNameEditText = findViewById(R.id.edit_event_name);
-        eventLocationEditText = findViewById(R.id.edit_event_location);
-        eventTimeEditText = findViewById(R.id.edit_event_time);
-        updateEventButton = findViewById(R.id.update_event_button);
+        initializeViews();
+        setupSportCategorySpinner();
 
         eventId = getIntent().getStringExtra("EVENT_ID");
         if (eventId == null) {
@@ -59,13 +60,67 @@ public class EditEventActivity extends AppCompatActivity {
         }
 
         loadEventData();
+    }
 
-        updateEventButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                updateEvent();
-            }
+    private void initializeViews() {
+        eventNameEditText = findViewById(R.id.edit_event_name);
+        eventLocationEditText = findViewById(R.id.edit_event_location);
+        eventTimeEditText = findViewById(R.id.edit_event_time);
+        sportCategorySpinner = findViewById(R.id.edit_sport_category_spinner);
+        maxParticipantsEditText = findViewById(R.id.edit_max_participants);
+        descriptionEditText = findViewById(R.id.edit_event_description);
+        startTimeEditText = findViewById(R.id.edit_event_start_time);
+        updateEventButton = findViewById(R.id.update_event_button);
+
+        // Dátumválasztó beállítása
+        eventTimeEditText.setFocusable(false);
+        eventTimeEditText.setOnClickListener(v -> {
+            Calendar cal = Calendar.getInstance();
+            DatePickerDialog datePickerDialog = new DatePickerDialog(
+                    this,
+                    (view, year, month, dayOfMonth) -> {
+                        String formattedDate = String.format("%d.%02d.%02d", year, month + 1, dayOfMonth);
+                        eventTimeEditText.setText(formattedDate);
+                    },
+                    cal.get(Calendar.YEAR),
+                    cal.get(Calendar.MONTH),
+                    cal.get(Calendar.DAY_OF_MONTH)
+            );
+            datePickerDialog.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
+            datePickerDialog.show();
         });
+
+        // Időválasztó beállítása
+        startTimeEditText.setFocusable(false);
+        startTimeEditText.setOnClickListener(v -> {
+            Calendar cal = Calendar.getInstance();
+            TimePickerDialog timePickerDialog = new TimePickerDialog(
+                    this,
+                    (view, hourOfDay, minute) -> {
+                        String formattedTime = String.format("%02d:%02d", hourOfDay, minute);
+                        startTimeEditText.setText(formattedTime);
+                    },
+                    cal.get(Calendar.HOUR_OF_DAY),
+                    cal.get(Calendar.MINUTE),
+                    true // 24 órás formátum
+            );
+            timePickerDialog.show();
+        });
+
+        updateEventButton.setOnClickListener(v -> updateEvent());
+    }
+
+    private void setupSportCategorySpinner() {
+        String[] sports = new String[]{
+                "Running", "Cycling", "Swimming", "Football", "Basketball",
+                "Tennis", "Volleyball", "Hiking", "Yoga", "Other"
+        };
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_dropdown_item_1line,
+                sports
+        );
+        sportCategorySpinner.setAdapter(adapter);
     }
 
     private void loadEventData() {
@@ -77,6 +132,10 @@ public class EditEventActivity extends AppCompatActivity {
                     eventNameEditText.setText(currentEvent.eventName);
                     eventLocationEditText.setText(currentEvent.eventLocation);
                     eventTimeEditText.setText(currentEvent.eventTime);
+                    sportCategorySpinner.setText(currentEvent.sportCategory);
+                    maxParticipantsEditText.setText(String.valueOf(currentEvent.maxParticipants));
+                    descriptionEditText.setText(currentEvent.description);
+                    startTimeEditText.setText(currentEvent.startTime);
                 }
             }
 
@@ -96,9 +155,50 @@ public class EditEventActivity extends AppCompatActivity {
         String newName = eventNameEditText.getText().toString().trim();
         String newLocation = eventLocationEditText.getText().toString().trim();
         String newTime = eventTimeEditText.getText().toString().trim();
+        String newSportCategory = sportCategorySpinner.getText().toString();
+        String newMaxParticipantsStr = maxParticipantsEditText.getText().toString().trim();
+        String newDescription = descriptionEditText.getText().toString().trim();
+        String newStartTime = startTimeEditText.getText().toString().trim();
 
-        if (TextUtils.isEmpty(newName) || TextUtils.isEmpty(newLocation) || TextUtils.isEmpty(newTime)) {
-            Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+        // Validation
+        if (TextUtils.isEmpty(newName)) {
+            eventNameEditText.setError("Please enter event name");
+            return;
+        }
+        if (TextUtils.isEmpty(newLocation)) {
+            eventLocationEditText.setError("Please enter event location");
+            return;
+        }
+        if (TextUtils.isEmpty(newTime)) {
+            eventTimeEditText.setError("Please enter event date");
+            return;
+        }
+        if (TextUtils.isEmpty(newSportCategory)) {
+            sportCategorySpinner.setError("Please select a sport category");
+            return;
+        }
+        if (TextUtils.isEmpty(newMaxParticipantsStr)) {
+            maxParticipantsEditText.setError("Please enter maximum participants");
+            return;
+        }
+        if (TextUtils.isEmpty(newDescription)) {
+            descriptionEditText.setError("Please enter event description");
+            return;
+        }
+        if (TextUtils.isEmpty(newStartTime)) {
+            startTimeEditText.setError("Please enter start time");
+            return;
+        }
+
+        int newMaxParticipants;
+        try {
+            newMaxParticipants = Integer.parseInt(newMaxParticipantsStr);
+            if (newMaxParticipants <= 0) {
+                maxParticipantsEditText.setError("Number must be greater than 0");
+                return;
+            }
+        } catch (NumberFormatException e) {
+            maxParticipantsEditText.setError("Please enter a valid number");
             return;
         }
 
@@ -108,17 +208,28 @@ public class EditEventActivity extends AppCompatActivity {
             return;
         }
 
-        EventActivity.Event updatedEvent = new EventActivity.Event(eventId, newName, newLocation, newTime, currentEvent.creatorId);
+        EventActivity.Event updatedEvent = new EventActivity.Event(
+                eventId,
+                newName,
+                newLocation,
+                newTime,
+                currentEvent.creatorId,
+                currentEvent.creatorEmail,
+                newSportCategory,
+                newMaxParticipants,
+                newDescription,
+                newStartTime
+        );
 
-        mDatabase.child(eventId).setValue(updatedEvent).addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                if (task.isSuccessful()) {
-                    Toast.makeText(EditEventActivity.this, "Event updated successfully", Toast.LENGTH_SHORT).show();
-                    finish();
-                } else {
-                    Toast.makeText(EditEventActivity.this, "Failed to update event: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                }
+        // Megtartjuk a jelenlegi résztvevőket
+        updatedEvent.participants = currentEvent.participants;
+
+        mDatabase.child(eventId).setValue(updatedEvent).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Toast.makeText(EditEventActivity.this, "Event updated successfully", Toast.LENGTH_SHORT).show();
+                finish();
+            } else {
+                Toast.makeText(EditEventActivity.this, "Failed to update event: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }

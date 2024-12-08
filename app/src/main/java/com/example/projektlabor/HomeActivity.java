@@ -66,35 +66,7 @@ public class HomeActivity extends AppCompatActivity {
         recyclerViewOtherEvents.setLayoutManager(new LinearLayoutManager(this));
     }
 
-    private void setupEventLists() {
-        userEventList = new ArrayList<>();
-        otherEventList = new ArrayList<>();
 
-        EventAdapter.OnEventClickListener listener = new EventAdapter.OnEventClickListener() {
-            @Override
-            public void onEventClick(EventActivity.Event event) {
-                Toast.makeText(HomeActivity.this, "Event clicked: " + event.eventName, Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onEditClick(EventActivity.Event event) {
-                Intent intent = new Intent(HomeActivity.this, EditEventActivity.class);
-                intent.putExtra("EVENT_ID", event.eventId);
-                startActivity(intent);
-            }
-
-            @Override
-            public void onDeleteClick(EventActivity.Event event) {
-                showDeleteConfirmationDialog(event);
-            }
-        };
-
-        userEventAdapter = new EventAdapter(userEventList, listener);
-        otherEventAdapter = new EventAdapter(otherEventList, listener);
-
-        recyclerViewUserEvents.setAdapter(userEventAdapter);
-        recyclerViewOtherEvents.setAdapter(otherEventAdapter);
-    }
 
     private void setupBottomNavigation() {
         LinearLayout navHome = findViewById(R.id.nav_home);
@@ -109,6 +81,107 @@ public class HomeActivity extends AppCompatActivity {
         LinearLayout navProfile = findViewById(R.id.nav_profile);
         navProfile.setOnClickListener(v -> startActivity(new Intent(HomeActivity.this, ProfileActivity.class)));
     }
+
+    private void setupEventLists() {
+        userEventList = new ArrayList<>();
+        otherEventList = new ArrayList<>();
+
+        EventAdapter.OnEventClickListener listener = new EventAdapter.OnEventClickListener() {
+            @Override
+            public void onEventClick(EventActivity.Event event) {
+                showEventDetails(event);
+            }
+
+            @Override
+            public void onEditClick(EventActivity.Event event) {
+                Intent intent = new Intent(HomeActivity.this, EditEventActivity.class);
+                intent.putExtra("EVENT_ID", event.eventId);
+                startActivity(intent);
+            }
+
+            @Override
+            public void onDeleteClick(EventActivity.Event event) {
+                showDeleteConfirmationDialog(event);
+            }
+
+            @Override
+            public void onJoinClick(EventActivity.Event event) {
+                if (!event.isFull()) {
+                    String userId = mAuth.getCurrentUser().getUid();
+                    mDatabase.child(event.eventId)
+                            .child("participants")
+                            .child(userId)
+                            .setValue(true)
+                            .addOnCompleteListener(task -> {
+                                if (task.isSuccessful()) {
+                                    Toast.makeText(HomeActivity.this,
+                                            "Successfully joined the event",
+                                            Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(HomeActivity.this,
+                                            "Failed to join event",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                }
+            }
+
+            @Override
+            public void onLeaveClick(EventActivity.Event event) {
+                String userId = mAuth.getCurrentUser().getUid();
+                mDatabase.child(event.eventId)
+                        .child("participants")
+                        .child(userId)
+                        .removeValue()
+                        .addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                Toast.makeText(HomeActivity.this,
+                                        "Successfully left the event",
+                                        Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(HomeActivity.this,
+                                        "Failed to leave event",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        });
+            }
+        };
+
+        userEventAdapter = new EventAdapter(userEventList, listener);
+        otherEventAdapter = new EventAdapter(otherEventList, listener);
+
+        recyclerViewUserEvents.setAdapter(userEventAdapter);
+        recyclerViewOtherEvents.setAdapter(otherEventAdapter);
+    }
+
+
+
+
+    private void showEventDetails(EventActivity.Event event) {
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.dialog_event_details);
+
+        TextView titleText = dialog.findViewById(R.id.dialog_title);
+        TextView descriptionText = dialog.findViewById(R.id.dialog_description);
+        TextView participantsText = dialog.findViewById(R.id.dialog_participants);
+        TextView sportCategoryText = dialog.findViewById(R.id.dialog_sport_category);
+        TextView startTimeText = dialog.findViewById(R.id.dialog_start_time);
+        TextView creatorText = dialog.findViewById(R.id.dialog_creator);
+
+        titleText.setText(event.eventName);
+        descriptionText.setText(event.description);
+        sportCategoryText.setText("Sport: " + event.sportCategory);
+        startTimeText.setText("Starts at: " + event.startTime);
+        creatorText.setText("Created by: " + event.creatorEmail);
+
+        int participantCount = event.participants != null ? event.participants.size() : 0;
+        participantsText.setText(String.format("%d/%d participants",
+                participantCount,
+                event.maxParticipants));
+
+        dialog.show();
+    }
+
 
     private void loadEvents() {
         mDatabase.addValueEventListener(new ValueEventListener() {
@@ -195,4 +268,8 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
     }
+
+
+
+
 }

@@ -46,12 +46,7 @@ public class SearchEventActivity extends AppCompatActivity {
         eventsRef = FirebaseDatabase.getInstance().getReference("events");
 
         ImageView backButton = findViewById(R.id.back_button);
-        backButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        backButton.setOnClickListener(v -> finish());
 
         editTextSearch = findViewById(R.id.edit_text_search);
         recyclerViewSearchResults = findViewById(R.id.recycler_view_search_results);
@@ -60,7 +55,7 @@ public class SearchEventActivity extends AppCompatActivity {
         eventAdapter = new EventAdapter(eventList, new EventAdapter.OnEventClickListener() {
             @Override
             public void onEventClick(EventActivity.Event event) {
-                Toast.makeText(SearchEventActivity.this, "Event clicked: " + event.eventName, Toast.LENGTH_SHORT).show();
+                showEventDetails(event);
             }
 
             @Override
@@ -81,6 +76,50 @@ public class SearchEventActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(SearchEventActivity.this, "You can only delete your own events", Toast.LENGTH_SHORT).show();
                 }
+            }
+
+            @Override
+            public void onJoinClick(EventActivity.Event event) {
+                if (!event.isFull()) {
+                    String userId = mAuth.getCurrentUser().getUid();
+                    eventsRef.child(event.eventId)
+                            .child("participants")
+                            .child(userId)
+                            .setValue(true)
+                            .addOnCompleteListener(task -> {
+                                if (task.isSuccessful()) {
+                                    Toast.makeText(SearchEventActivity.this,
+                                            "Successfully joined the event",
+                                            Toast.LENGTH_SHORT).show();
+                                    searchEvents(editTextSearch.getText().toString());
+                                } else {
+                                    Toast.makeText(SearchEventActivity.this,
+                                            "Failed to join event",
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                }
+            }
+
+            @Override
+            public void onLeaveClick(EventActivity.Event event) {
+                String userId = mAuth.getCurrentUser().getUid();
+                eventsRef.child(event.eventId)
+                        .child("participants")
+                        .child(userId)
+                        .removeValue()
+                        .addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                Toast.makeText(SearchEventActivity.this,
+                                        "Successfully left the event",
+                                        Toast.LENGTH_SHORT).show();
+                                searchEvents(editTextSearch.getText().toString());
+                            } else {
+                                Toast.makeText(SearchEventActivity.this,
+                                        "Failed to leave event",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        });
             }
         });
 
@@ -126,6 +165,31 @@ public class SearchEventActivity extends AppCompatActivity {
         });
     }
 
+    private void showEventDetails(EventActivity.Event event) {
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.dialog_event_details);
+
+        TextView titleText = dialog.findViewById(R.id.dialog_title);
+        TextView descriptionText = dialog.findViewById(R.id.dialog_description);
+        TextView participantsText = dialog.findViewById(R.id.dialog_participants);
+        TextView sportCategoryText = dialog.findViewById(R.id.dialog_sport_category);
+        TextView startTimeText = dialog.findViewById(R.id.dialog_start_time);
+        TextView creatorText = dialog.findViewById(R.id.dialog_creator);
+
+        titleText.setText(event.eventName);
+        descriptionText.setText(event.description);
+        sportCategoryText.setText("Sport: " + event.sportCategory);
+        startTimeText.setText("Starts at: " + event.startTime);
+        creatorText.setText("Created by: " + event.creatorEmail);
+
+        int participantCount = event.participants != null ? event.participants.size() : 0;
+        participantsText.setText(String.format("%d/%d participants",
+                participantCount,
+                event.maxParticipants));
+
+        dialog.show();
+    }
+
     private void showDeleteConfirmationDialog(final EventActivity.Event event) {
         final Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -140,34 +204,23 @@ public class SearchEventActivity extends AppCompatActivity {
         titleText.setText("Confirm Deletion");
         messageText.setText("Are you sure you want to delete this event?");
 
-        yesButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                deleteEvent(event);
-                dialog.dismiss();
-            }
+        yesButton.setOnClickListener(v -> {
+            deleteEvent(event);
+            dialog.dismiss();
         });
 
-        noButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dialog.dismiss();
-            }
-        });
+        noButton.setOnClickListener(v -> dialog.dismiss());
 
         dialog.show();
     }
 
     private void deleteEvent(EventActivity.Event event) {
-        eventsRef.child(event.eventId).removeValue().addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                if (task.isSuccessful()) {
-                    Toast.makeText(SearchEventActivity.this, "Event deleted successfully", Toast.LENGTH_SHORT).show();
-                    searchEvents(editTextSearch.getText().toString());  // Refresh the search results
-                } else {
-                    Toast.makeText(SearchEventActivity.this, "Failed to delete event: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                }
+        eventsRef.child(event.eventId).removeValue().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Toast.makeText(SearchEventActivity.this, "Event deleted successfully", Toast.LENGTH_SHORT).show();
+                searchEvents(editTextSearch.getText().toString());  // Refresh the search results
+            } else {
+                Toast.makeText(SearchEventActivity.this, "Failed to delete event: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }

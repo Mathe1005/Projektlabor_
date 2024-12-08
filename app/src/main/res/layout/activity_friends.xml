@@ -103,6 +103,31 @@
             </com.google.android.material.card.MaterialCardView>
 
             <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Friend Requests"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:id="@+id/text_empty_requests"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="No pending friend requests"
+                android:textAlignment="center"
+                android:textSize="16sp"
+                android:padding="16dp"
+                android:visibility="gone"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view_friend_requests"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:nestedScrollingEnabled="false"/>
+
+            <TextView
                 android:id="@+id/text_friends_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -110,12 +135,6 @@
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="8dp"/>
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recycler_view_friends"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:nestedScrollingEnabled="false"/>
 
             <TextView
                 android:id="@+id/text_empty_state"
@@ -126,6 +145,12 @@
                 android:textSize="16sp"
                 android:padding="16dp"
                 android:visibility="gone"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view_friends"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"/>
 
             <ProgressBar
                 android:id="@+id/progress_bar"

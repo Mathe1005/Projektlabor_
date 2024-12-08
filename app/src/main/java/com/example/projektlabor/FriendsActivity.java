@@ -25,15 +25,20 @@ import java.util.Map;
 
 public class FriendsActivity extends AppCompatActivity {
     private RecyclerView recyclerViewFriends;
+    private RecyclerView recyclerViewRequests;
     private FriendAdapter friendAdapter;
+    private FriendRequestAdapter requestAdapter;
     private List<User> friendsList;
+    private List<FriendRequest> requestsList;
     private DatabaseReference usersRef;
+    private DatabaseReference requestsRef;
     private FirebaseAuth mAuth;
     private TextInputEditText editTextFriendEmail;
     private MaterialButton btnAddFriend;
     private ProgressBar progressBar;
     private ImageView backButton;
     private TextView textEmptyState;
+    private TextView textEmptyRequests;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,62 +47,74 @@ public class FriendsActivity extends AppCompatActivity {
 
         initializeFirebase();
         initializeViews();
-        setupRecyclerView();
+        setupRecyclerViews();
         setupClickListeners();
+        loadFriendRequests();
         loadFriends();
     }
 
     private void initializeFirebase() {
         mAuth = FirebaseAuth.getInstance();
         usersRef = FirebaseDatabase.getInstance().getReference("users");
+        requestsRef = FirebaseDatabase.getInstance().getReference("friendRequests");
     }
 
     private void initializeViews() {
         recyclerViewFriends = findViewById(R.id.recycler_view_friends);
+        recyclerViewRequests = findViewById(R.id.recycler_view_friend_requests);
         editTextFriendEmail = findViewById(R.id.edit_text_friend_email);
         btnAddFriend = findViewById(R.id.btn_add_friend);
         progressBar = findViewById(R.id.progress_bar);
         backButton = findViewById(R.id.back_button);
         textEmptyState = findViewById(R.id.text_empty_state);
+        textEmptyRequests = findViewById(R.id.text_empty_requests);
     }
 
-    private void setupRecyclerView() {
+    private void setupRecyclerViews() {
         friendsList = new ArrayList<>();
+        requestsList = new ArrayList<>();
+
+        // Friend Adapter setup
         friendAdapter = new FriendAdapter(friendsList, new FriendAdapter.OnFriendClickListener() {
             @Override
             public void onFriendClick(User friend) {
-                showToast("Selected friend: " + friend.getEmail());
+                showFriendOptionsDialog(friend);
+            }
+        });
+
+        // Request Adapter setup
+        requestAdapter = new FriendRequestAdapter(requestsList, new FriendRequestAdapter.OnRequestClickListener() {
+            @Override
+            public void onAcceptClick(FriendRequest request) {
+                acceptFriendRequest(request);
+            }
+
+            @Override
+            public void onRejectClick(FriendRequest request) {
+                rejectFriendRequest(request);
             }
         });
 
         recyclerViewFriends.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewFriends.setAdapter(friendAdapter);
+
+        recyclerViewRequests.setLayoutManager(new LinearLayoutManager(this));
+        recyclerViewRequests.setAdapter(requestAdapter);
     }
 
     private void setupClickListeners() {
-        btnAddFriend.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String friendEmail = editTextFriendEmail.getText().toString().trim();
-                if (validateEmail(friendEmail)) {
-                    addFriend(friendEmail);
-                }
+        btnAddFriend.setOnClickListener(v -> {
+            String friendEmail = editTextFriendEmail.getText().toString().trim();
+            if (validateEmail(friendEmail)) {
+                sendFriendRequest(friendEmail);
             }
         });
 
-        backButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onBackPressed();
-            }
-        });
+        backButton.setOnClickListener(v -> onBackPressed());
 
-        editTextFriendEmail.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if (hasFocus) {
-                    editTextFriendEmail.setError(null);
-                }
+        editTextFriendEmail.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                editTextFriendEmail.setError(null);
             }
         });
     }
@@ -117,7 +134,7 @@ public class FriendsActivity extends AppCompatActivity {
 
         String currentUserEmail = mAuth.getCurrentUser().getEmail();
         if (email.equals(currentUserEmail)) {
-            editTextFriendEmail.setError("You cannot add yourself as a friend");
+            editTextFriendEmail.setError("You cannot add yourself");
             editTextFriendEmail.requestFocus();
             return false;
         }
@@ -125,126 +142,220 @@ public class FriendsActivity extends AppCompatActivity {
         return true;
     }
 
-    private void loadFriends() {
+    private void sendFriendRequest(String friendEmail) {
         showProgress();
         String currentUserId = mAuth.getCurrentUser().getUid();
-
-        usersRef.child(currentUserId).child("friends").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                friendsList.clear();
-
-                if (!dataSnapshot.exists() || !dataSnapshot.hasChildren()) {
-                    hideProgress();
-                    showEmptyState(true);
-                    return;
-                }
-
-                showEmptyState(false);
-                int totalFriends = (int) dataSnapshot.getChildrenCount();
-                final int[] loadedFriends = {0};
-
-                for (DataSnapshot friendSnapshot : dataSnapshot.getChildren()) {
-                    String friendId = friendSnapshot.getKey();
-                    usersRef.child(friendId).addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                            if (dataSnapshot.exists()) {
-                                String email = dataSnapshot.child("email").getValue(String.class);
-                                String username = dataSnapshot.child("username").getValue(String.class);
-
-                                User friend = new User();
-                                friend.setUserId(dataSnapshot.getKey());
-                                friend.setEmail(email);
-                                friend.setUsername(username != null ? username : email);
-
-                                friendsList.add(friend);
-                                friendAdapter.notifyDataSetChanged();
-                            }
-
-                            loadedFriends[0]++;
-                            if (loadedFriends[0] >= totalFriends) {
-                                hideProgress();
-                                showEmptyState(friendsList.isEmpty());
-                            }
-                        }
-
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError databaseError) {
-                            hideProgress();
-                            showToast("Error loading friend: " + databaseError.getMessage());
-                        }
-                    });
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                hideProgress();
-                showToast("Error loading friends: " + databaseError.getMessage());
-            }
-        });
-    }
-
-    private void addFriend(String friendEmail) {
-        showProgress();
-        String currentUserId = mAuth.getCurrentUser().getUid();
+        String currentUserEmail = mAuth.getCurrentUser().getEmail();
+        String currentUsername = mAuth.getCurrentUser().getDisplayName();
 
         usersRef.orderByChild("email").equalTo(friendEmail)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        hideProgress();
+
                         if (!dataSnapshot.exists()) {
-                            hideProgress();
-                            editTextFriendEmail.setError("User not found with this email");
+                            editTextFriendEmail.setError("User not found");
                             return;
                         }
 
                         for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
                             String friendId = userSnapshot.getKey();
+                            User friendUser = userSnapshot.getValue(User.class);
 
-                            usersRef.child(currentUserId).child("friends").child(friendId)
-                                    .addListenerForSingleValueEvent(new ValueEventListener() {
-                                        @Override
-                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                            if (dataSnapshot.exists()) {
-                                                hideProgress();
-                                                showToast("You are already friends with this user");
-                                                return;
-                                            }
+                            if (friendUser.isBlocked(currentUserId)) {
+                                editTextFriendEmail.setError("Unable to send request");
+                                return;
+                            }
 
-                                            Map<String, Object> updates = new HashMap<>();
-                                            updates.put("/users/" + currentUserId + "/friends/" + friendId, true);
-                                            updates.put("/users/" + friendId + "/friends/" + currentUserId, true);
+                            FriendRequest request = new FriendRequest(
+                                    currentUserId,
+                                    friendId,
+                                    currentUserEmail,
+                                    currentUsername != null ? currentUsername : currentUserEmail
+                            );
 
-                                            FirebaseDatabase.getInstance().getReference()
-                                                    .updateChildren(updates)
-                                                    .addOnSuccessListener(aVoid -> {
-                                                        hideProgress();
-                                                        showToast("Friend added successfully");
-                                                        editTextFriendEmail.setText("");
-                                                    })
-                                                    .addOnFailureListener(e -> {
-                                                        hideProgress();
-                                                        showToast("Error adding friend: " + e.getMessage());
-                                                    });
-                                        }
-
-                                        @Override
-                                        public void onCancelled(@NonNull DatabaseError databaseError) {
-                                            hideProgress();
-                                            showToast("Database error: " + databaseError.getMessage());
-                                        }
-                                    });
-                            return;
+                            requestsRef.child(request.getRequestId()).setValue(request)
+                                    .addOnSuccessListener(aVoid -> {
+                                        Toast.makeText(FriendsActivity.this,
+                                                "Friend request sent",
+                                                Toast.LENGTH_SHORT).show();
+                                        editTextFriendEmail.setText("");
+                                    })
+                                    .addOnFailureListener(e ->
+                                            Toast.makeText(FriendsActivity.this,
+                                                    "Failed to send request",
+                                                    Toast.LENGTH_SHORT).show());
                         }
                     }
 
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
                         hideProgress();
-                        showToast("Database error: " + databaseError.getMessage());
+                        Toast.makeText(FriendsActivity.this,
+                                "Error: " + databaseError.getMessage(),
+                                Toast.LENGTH_SHORT).show();
                     }
+                });
+    }
+
+    private void acceptFriendRequest(FriendRequest request) {
+        showProgress();
+        String currentUserId = mAuth.getCurrentUser().getUid();
+        Map<String, Object> updates = new HashMap<>();
+
+        updates.put("/users/" + currentUserId + "/friends/" + request.getSenderId(), true);
+        updates.put("/users/" + request.getSenderId() + "/friends/" + currentUserId, true);
+        updates.put("/friendRequests/" + request.getRequestId() + "/status", "accepted");
+
+        FirebaseDatabase.getInstance().getReference()
+                .updateChildren(updates)
+                .addOnSuccessListener(aVoid -> {
+                    hideProgress();
+                    Toast.makeText(FriendsActivity.this,
+                            "Friend request accepted",
+                            Toast.LENGTH_SHORT).show();
+                    loadFriends();
+                    loadFriendRequests();
+                })
+                .addOnFailureListener(e -> {
+                    hideProgress();
+                    Toast.makeText(FriendsActivity.this,
+                            "Failed to accept request",
+                            Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private void rejectFriendRequest(FriendRequest request) {
+        showProgress();
+        requestsRef.child(request.getRequestId())
+                .child("status")
+                .setValue("rejected")
+                .addOnSuccessListener(aVoid -> {
+                    hideProgress();
+                    Toast.makeText(FriendsActivity.this,
+                            "Friend request rejected",
+                            Toast.LENGTH_SHORT).show();
+                    loadFriendRequests();
+                })
+                .addOnFailureListener(e -> {
+                    hideProgress();
+                    Toast.makeText(FriendsActivity.this,
+                            "Failed to reject request",
+                            Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private void loadFriends() {
+        showProgress();
+        String currentUserId = mAuth.getCurrentUser().getUid();
+
+        usersRef.child(currentUserId).child("friends")
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        friendsList.clear();
+
+                        if (!dataSnapshot.exists() || !dataSnapshot.hasChildren()) {
+                            hideProgress();
+                            showEmptyState(true);
+                            return;
+                        }
+
+                        showEmptyState(false);
+                        for (DataSnapshot friendSnapshot : dataSnapshot.getChildren()) {
+                            String friendId = friendSnapshot.getKey();
+                            loadFriendDetails(friendId);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        hideProgress();
+                        Toast.makeText(FriendsActivity.this,
+                                "Error loading friends: " + databaseError.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void loadFriendDetails(String friendId) {
+        usersRef.child(friendId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                User friend = dataSnapshot.getValue(User.class);
+                if (friend != null) {
+                    friendsList.add(friend);
+                    friendAdapter.notifyDataSetChanged();
+                }
+                hideProgress();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                hideProgress();
+                Toast.makeText(FriendsActivity.this,
+                        "Error loading friend details: " + databaseError.getMessage(),
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void loadFriendRequests() {
+        String currentUserId = mAuth.getCurrentUser().getUid();
+        requestsRef.orderByChild("receiverId")
+                .equalTo(currentUserId)
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        requestsList.clear();
+                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                            FriendRequest request = snapshot.getValue(FriendRequest.class);
+                            if (request != null && request.getStatus().equals("pending")) {
+                                requestsList.add(request);
+                            }
+                        }
+                        requestAdapter.notifyDataSetChanged();
+                        updateRequestsVisibility();
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Toast.makeText(FriendsActivity.this,
+                                "Error loading requests",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void showFriendOptionsDialog(User friend) {
+        // Itt implementáld a barát opciók dialógust (törlés, blokkolás, stb.)
+        // Például használhatsz egy AlertDialog-ot vagy egy egyedi dialógust
+    }
+
+    private void blockUser(String userId) {
+        showProgress();
+        String currentUserId = mAuth.getCurrentUser().getUid();
+        Map<String, Object> updates = new HashMap<>();
+
+        updates.put("/users/" + currentUserId + "/blockedUsers/" + userId, true);
+        updates.put("/users/" + currentUserId + "/friends/" + userId, null);
+        updates.put("/users/" + userId + "/friends/" + currentUserId, null);
+
+        FirebaseDatabase.getInstance().getReference()
+                .updateChildren(updates)
+                .addOnSuccessListener(aVoid -> {
+                    hideProgress();
+                    Toast.makeText(FriendsActivity.this,
+                            "User blocked",
+                            Toast.LENGTH_SHORT).show();
+                    loadFriends();
+                })
+                .addOnFailureListener(e -> {
+                    hideProgress();
+                    Toast.makeText(FriendsActivity.this,
+                            "Failed to block user",
+                            Toast.LENGTH_SHORT).show();
                 });
     }
 
@@ -263,8 +374,9 @@ public class FriendsActivity extends AppCompatActivity {
         recyclerViewFriends.setVisibility(show ? View.GONE : View.VISIBLE);
     }
 
-    private void showToast(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    private void updateRequestsVisibility() {
+        textEmptyRequests.setVisibility(requestsList.isEmpty() ? View.VISIBLE : View.GONE);
+        recyclerViewRequests.setVisibility(requestsList.isEmpty() ? View.GONE : View.VISIBLE);
     }
 
     @Override
