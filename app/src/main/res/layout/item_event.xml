@@ -7,132 +7,33 @@
     android:layout_margin="8dp"
     app:cardCornerRadius="8dp"
     app:cardElevation="4dp"
+    android:foreground="?android:attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
     style="@style/SportCard">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="vertical"
         android:padding="16dp">
 
         <TextView
             android:id="@+id/text_event_name"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="18sp"
+            android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="@android:color/black"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/button_edit_event"/>
-
-        <TextView
-            android:id="@+id/text_event_location"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textColor="@android:color/black"
-            app:layout_constraintTop_toBottomOf="@id/text_event_name"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/button_edit_event"/>
-
-        <TextView
-            android:id="@+id/text_event_time"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textColor="@android:color/black"
-            app:layout_constraintTop_toBottomOf="@id/text_event_location"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/button_edit_event"/>
+            android:layout_marginBottom="8dp"/>
 
         <TextView
             android:id="@+id/text_creator_email"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textColor="@android:color/black"
-            app:layout_constraintTop_toBottomOf="@id/text_event_time"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/button_edit_event"/>
-
-        <TextView
-            android:id="@+id/text_sport_category"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textColor="@android:color/black"
-            app:layout_constraintTop_toBottomOf="@id/text_creator_email"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/button_edit_event"/>
-
-        <TextView
-            android:id="@+id/text_participants_count"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textColor="@android:color/black"
-            app:layout_constraintTop_toBottomOf="@id/text_sport_category"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/button_edit_event"/>
-
-        <TextView
-            android:id="@+id/text_description"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textColor="@android:color/black"
-            app:layout_constraintTop_toBottomOf="@id/text_participants_count"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/button_edit_event"/>
-
-        <TextView
-            android:id="@+id/text_start_time"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textColor="@android:color/black"
-            app:layout_constraintTop_toBottomOf="@id/text_description"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/button_edit_event"/>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/button_edit_event"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Edit"
-            android:textColor="@android:color/white"
             android:textSize="14sp"
-            style="@style/SportButton"
-            app:backgroundTint="@color/primaryColor"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
+            android:textColor="@android:color/darker_gray"/>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/button_delete_event"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Delete"
-            android:textColor="@android:color/white"
-            android:textSize="14sp"
-            style="@style/SportButton"
-            app:backgroundTint="#FF0000"
-            app:layout_constraintTop_toBottomOf="@id/button_edit_event"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="8dp"/>
+    </LinearLayout>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/button_join_event"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Join Event"
-            android:textColor="@android:color/white"
-            android:textSize="14sp"
-            style="@style/SportButton"
-            app:backgroundTint="@color/primaryColor"
-            app:layout_constraintTop_toBottomOf="@id/button_delete_event"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="8dp"/>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>
-

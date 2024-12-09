@@ -2,6 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -26,14 +32,24 @@
         <activity android:name=".HomeActivity" />
         <activity android:name=".EventActivity" />
         <activity android:name=".EditEventActivity" />
-        <activity android:name=".EventAdapter" />
         <activity android:name=".ProfileActivity"/>
         <activity android:name=".CalendarActivity"/>
         <activity android:name=".SearchEventActivity" />
         <activity android:name=".FriendsActivity" />
-        <activity android:name=".FriendAdapter" />
         <activity android:name=".SetUsernameActivity" />
         <activity android:name=".FilteredEventsActivity" />
+        <activity android:name=".EventDetailsActivity" />
+        <activity android:name=".InviteFriendsActivity" />
+        <activity android:name=".NotificationsActivity" />
+
+        <receiver
+            android:name=".NotificationService"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
 
     </application>
 

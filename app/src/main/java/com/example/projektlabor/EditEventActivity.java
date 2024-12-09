@@ -146,6 +146,8 @@ public class EditEventActivity extends AppCompatActivity {
         });
     }
 
+    // Az updateEvent() metódusban módosítani kell az Event objektum létrehozását:
+
     private void updateEvent() {
         if (currentEvent == null) {
             Toast.makeText(this, "Error: Event data not loaded", Toast.LENGTH_SHORT).show();
@@ -208,24 +210,37 @@ public class EditEventActivity extends AppCompatActivity {
             return;
         }
 
+        // Az új konstruktor használata, megtartva az eredeti isPrivate értéket
         EventActivity.Event updatedEvent = new EventActivity.Event(
                 eventId,
                 newName,
                 newLocation,
                 newTime,
                 currentEvent.creatorId,
-                currentEvent.creatorUsername,  // megtartjuk az eredeti létrehozó felhasználónevét
+                currentEvent.creatorUsername,
                 newSportCategory,
                 newMaxParticipants,
                 newDescription,
-                newStartTime
+                newStartTime,
+                currentEvent.isPrivate  // megtartjuk az eredeti isPrivate értéket
         );
 
-        // Megtartjuk a jelenlegi résztvevőket
+        // Megtartjuk a jelenlegi résztvevőket és meghívottakat
         updatedEvent.participants = currentEvent.participants;
+        updatedEvent.invitedUsers = currentEvent.invitedUsers;
 
         mDatabase.child(eventId).setValue(updatedEvent).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
+                // Értesítjük a résztvevőket a módosításról
+                if (currentEvent.participants != null) {
+                    for (String participantId : currentEvent.participants.keySet()) {
+                        NotificationService.sendEventUpdateNotification(
+                                EditEventActivity.this,
+                                updatedEvent.eventName,
+                                "modified"
+                        );
+                    }
+                }
                 Toast.makeText(EditEventActivity.this, "Event updated successfully", Toast.LENGTH_SHORT).show();
                 finish();
             } else {

@@ -65,83 +65,11 @@ public class FilteredEventsActivity extends AppCompatActivity {
     private void setupEventsList() {
         eventList = new ArrayList<>();
         recyclerViewEvents.setLayoutManager(new LinearLayoutManager(this));
-
-        eventAdapter = new EventAdapter(eventList, new EventAdapter.OnEventClickListener() {
-            @Override
-            public void onEventClick(EventActivity.Event event) {
-                showEventDetails(event);
-            }
-
-            @Override
-            public void onEditClick(EventActivity.Event event) {
-                if (event.creatorId.equals(mAuth.getCurrentUser().getUid())) {
-                    Intent intent = new Intent(FilteredEventsActivity.this, EditEventActivity.class);
-                    intent.putExtra("EVENT_ID", event.eventId);
-                    startActivity(intent);
-                } else {
-                    Toast.makeText(FilteredEventsActivity.this,
-                            "You can only edit your own events",
-                            Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onDeleteClick(EventActivity.Event event) {
-                if (event.creatorId.equals(mAuth.getCurrentUser().getUid())) {
-                    showDeleteConfirmationDialog(event);
-                } else {
-                    Toast.makeText(FilteredEventsActivity.this,
-                            "You can only delete your own events",
-                            Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onJoinClick(EventActivity.Event event) {
-                if (!event.isFull()) {
-                    String userId = mAuth.getCurrentUser().getUid();
-                    eventsRef.child(event.eventId)
-                            .child("participants")
-                            .child(userId)
-                            .setValue(true)
-                            .addOnCompleteListener(task -> {
-                                if (task.isSuccessful()) {
-                                    Toast.makeText(FilteredEventsActivity.this,
-                                            "Successfully joined the event",
-                                            Toast.LENGTH_SHORT).show();
-                                    loadFilteredEvents();
-                                } else {
-                                    Toast.makeText(FilteredEventsActivity.this,
-                                            "Failed to join event",
-                                            Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                }
-            }
-
-            @Override
-            public void onLeaveClick(EventActivity.Event event) {
-                String userId = mAuth.getCurrentUser().getUid();
-                eventsRef.child(event.eventId)
-                        .child("participants")
-                        .child(userId)
-                        .removeValue()
-                        .addOnCompleteListener(task -> {
-                            if (task.isSuccessful()) {
-                                Toast.makeText(FilteredEventsActivity.this,
-                                        "Successfully left the event",
-                                        Toast.LENGTH_SHORT).show();
-                                loadFilteredEvents();
-                            } else {
-                                Toast.makeText(FilteredEventsActivity.this,
-                                        "Failed to leave event",
-                                        Toast.LENGTH_SHORT).show();
-                            }
-                        });
-            }
-        });
-
+        eventAdapter = new EventAdapter(eventList, this);
         recyclerViewEvents.setAdapter(eventAdapter);
+
+        mAuth = FirebaseAuth.getInstance();
+        eventsRef = FirebaseDatabase.getInstance().getReference("events");
     }
 
     private void loadFilteredEvents() {

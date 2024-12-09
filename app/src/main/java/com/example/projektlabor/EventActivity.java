@@ -14,6 +14,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
@@ -31,6 +32,7 @@ public class EventActivity extends AppCompatActivity {
     private TextInputEditText eventNameEditText, eventLocationEditText, eventTimeEditText;
     private TextInputEditText maxParticipantsEditText, descriptionEditText, startTimeEditText;
     private AutoCompleteTextView sportCategorySpinner;
+    private SwitchMaterial switchPrivateEvent;
     private MaterialButton createEventButton;
     private ImageView backButton;
 
@@ -60,6 +62,7 @@ public class EventActivity extends AppCompatActivity {
         maxParticipantsEditText = findViewById(R.id.max_participants);
         descriptionEditText = findViewById(R.id.event_description);
         startTimeEditText = findViewById(R.id.event_start_time);
+        switchPrivateEvent = findViewById(R.id.switch_private_event);
         createEventButton = findViewById(R.id.create_event_button);
 
         eventTimeEditText.setFocusable(false);
@@ -119,6 +122,7 @@ public class EventActivity extends AppCompatActivity {
         String maxParticipantsStr = maxParticipantsEditText.getText().toString().trim();
         String description = descriptionEditText.getText().toString().trim();
         String startTime = startTimeEditText.getText().toString().trim();
+        boolean isPrivate = switchPrivateEvent.isChecked();
 
         // Validation
         if (TextUtils.isEmpty(eventName)) {
@@ -168,17 +172,24 @@ public class EventActivity extends AppCompatActivity {
 
         Event event = new Event(eventId, eventName, eventLocation, eventTime,
                 creatorId, creatorUsername, sportCategory,
-                maxParticipants, description, startTime);
+                maxParticipants, description, startTime, isPrivate);
 
         if (eventId != null) {
             mDatabase.child(eventId).setValue(event)
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
-                            Toast.makeText(EventActivity.this,
-                                    "Event created successfully",
-                                    Toast.LENGTH_SHORT).show();
-                            Intent intent = new Intent(EventActivity.this, HomeActivity.class);
-                            startActivity(intent);
+                            NotificationService.scheduleEventNotification(EventActivity.this, event);
+                            Toast.makeText(EventActivity.this, "Event created successfully", Toast.LENGTH_SHORT).show();
+
+                            if (isPrivate) {
+                                // Ha privát az esemény, akkor rögtön megnyitjuk a barát meghívó képernyőt
+                                Intent inviteIntent = new Intent(EventActivity.this, InviteFriendsActivity.class);
+                                inviteIntent.putExtra("EVENT_ID", eventId);
+                                startActivity(inviteIntent);
+                            }
+
+                            Intent homeIntent = new Intent(EventActivity.this, HomeActivity.class);
+                            startActivity(homeIntent);
                             finish();
                         } else {
                             Toast.makeText(EventActivity.this,
@@ -201,14 +212,17 @@ public class EventActivity extends AppCompatActivity {
         public String description;
         public String startTime;
         public Map<String, Boolean> participants;
+        public boolean isPrivate;
+        public Map<String, Boolean> invitedUsers;
 
         public Event() {
             this.participants = new HashMap<>();
+            this.invitedUsers = new HashMap<>();
         }
 
         public Event(String eventId, String eventName, String eventLocation, String eventTime,
                      String creatorId, String creatorUsername, String sportCategory,
-                     int maxParticipants, String description, String startTime) {
+                     int maxParticipants, String description, String startTime, boolean isPrivate) {
             this.eventId = eventId;
             this.eventName = eventName;
             this.eventLocation = eventLocation;
@@ -219,7 +233,9 @@ public class EventActivity extends AppCompatActivity {
             this.maxParticipants = maxParticipants;
             this.description = description;
             this.startTime = startTime;
+            this.isPrivate = isPrivate;
             this.participants = new HashMap<>();
+            this.invitedUsers = new HashMap<>();
         }
 
         public boolean isFull() {
@@ -228,6 +244,10 @@ public class EventActivity extends AppCompatActivity {
 
         public boolean isParticipant(String userId) {
             return participants != null && participants.containsKey(userId);
+        }
+
+        public boolean isInvited(String userId) {
+            return invitedUsers != null && invitedUsers.containsKey(userId);
         }
     }
 }

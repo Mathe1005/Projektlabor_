@@ -168,6 +168,13 @@
 
                     </com.google.android.material.textfield.TextInputLayout>
 
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switch_private_event"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Private Event (Only invited friends can join)"
+                        android:layout_marginBottom="16dp"/>
+
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"

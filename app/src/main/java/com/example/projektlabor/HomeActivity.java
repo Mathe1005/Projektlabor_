@@ -75,6 +75,9 @@ public class HomeActivity extends AppCompatActivity {
         LinearLayout navCalendar = findViewById(R.id.nav_calendar);
         navCalendar.setOnClickListener(v -> startActivity(new Intent(HomeActivity.this, CalendarActivity.class)));
 
+        LinearLayout navNotifications = findViewById(R.id.nav_notifications);
+        navNotifications.setOnClickListener(v -> startActivity(new Intent(HomeActivity.this, NotificationsActivity.class)));
+
         LinearLayout navFriends = findViewById(R.id.nav_friends);
         navFriends.setOnClickListener(v -> startActivity(new Intent(HomeActivity.this, FriendsActivity.class)));
 
@@ -86,75 +89,12 @@ public class HomeActivity extends AppCompatActivity {
         userEventList = new ArrayList<>();
         otherEventList = new ArrayList<>();
 
-        EventAdapter.OnEventClickListener listener = new EventAdapter.OnEventClickListener() {
-            @Override
-            public void onEventClick(EventActivity.Event event) {
-                showEventDetails(event);
-            }
-
-            @Override
-            public void onEditClick(EventActivity.Event event) {
-                Intent intent = new Intent(HomeActivity.this, EditEventActivity.class);
-                intent.putExtra("EVENT_ID", event.eventId);
-                startActivity(intent);
-            }
-
-            @Override
-            public void onDeleteClick(EventActivity.Event event) {
-                showDeleteConfirmationDialog(event);
-            }
-
-            @Override
-            public void onJoinClick(EventActivity.Event event) {
-                if (!event.isFull()) {
-                    String userId = mAuth.getCurrentUser().getUid();
-                    mDatabase.child(event.eventId)
-                            .child("participants")
-                            .child(userId)
-                            .setValue(true)
-                            .addOnCompleteListener(task -> {
-                                if (task.isSuccessful()) {
-                                    Toast.makeText(HomeActivity.this,
-                                            "Successfully joined the event",
-                                            Toast.LENGTH_SHORT).show();
-                                } else {
-                                    Toast.makeText(HomeActivity.this,
-                                            "Failed to join event",
-                                            Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                }
-            }
-
-            @Override
-            public void onLeaveClick(EventActivity.Event event) {
-                String userId = mAuth.getCurrentUser().getUid();
-                mDatabase.child(event.eventId)
-                        .child("participants")
-                        .child(userId)
-                        .removeValue()
-                        .addOnCompleteListener(task -> {
-                            if (task.isSuccessful()) {
-                                Toast.makeText(HomeActivity.this,
-                                        "Successfully left the event",
-                                        Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(HomeActivity.this,
-                                        "Failed to leave event",
-                                        Toast.LENGTH_SHORT).show();
-                            }
-                        });
-            }
-        };
-
-        userEventAdapter = new EventAdapter(userEventList, listener);
-        otherEventAdapter = new EventAdapter(otherEventList, listener);
+        userEventAdapter = new EventAdapter(userEventList, this);
+        otherEventAdapter = new EventAdapter(otherEventList, this);
 
         recyclerViewUserEvents.setAdapter(userEventAdapter);
         recyclerViewOtherEvents.setAdapter(otherEventAdapter);
     }
-
-
 
 
     private void showEventDetails(EventActivity.Event event) {
