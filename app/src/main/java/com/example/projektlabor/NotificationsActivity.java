@@ -55,8 +55,6 @@ public class NotificationsActivity extends AppCompatActivity {
     private void loadNotifications() {
         String userId = mAuth.getCurrentUser().getUid();
         notificationsRef.child(userId)
-                .orderByChild("status")
-                .equalTo("pending")
                 .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -64,7 +62,10 @@ public class NotificationsActivity extends AppCompatActivity {
                         for (DataSnapshot notifSnapshot : snapshot.getChildren()) {
                             EventNotification notification = notifSnapshot.getValue(EventNotification.class);
                             if (notification != null) {
-                                notifications.add(notification);
+                                if (notification.getStatus().equals("pending") ||
+                                        notification.getStatus().equals("unread")) {
+                                    notifications.add(notification);
+                                }
                             }
                         }
 
@@ -87,23 +88,23 @@ public class NotificationsActivity extends AppCompatActivity {
     }
 
     private void acceptInvitation(EventNotification notification) {
-        // Az értesítés státuszának frissítése
-        notificationsRef.child(mAuth.getCurrentUser().getUid())
-                .child(notification.getNotificationId())
-                .child("status")
-                .setValue("accepted");
+        if (notification.getNotificationType() == null ||
+                notification.getNotificationType().equals("default")) {
+            // Meghívó elfogadása
+            notificationsRef.child(mAuth.getCurrentUser().getUid())
+                    .child(notification.getNotificationId())
+                    .child("status")
+                    .setValue("accepted");
 
-        // Felhasználó hozzáadása az esemény résztvevőihez
-        eventsRef.child(notification.getEventId())
-                .child("participants")
-                .child(mAuth.getCurrentUser().getUid())
-                .setValue(true)
-                .addOnSuccessListener(aVoid -> {
-                    // Sikeres csatlakozás
-                })
-                .addOnFailureListener(e -> {
-                    // Hiba kezelése
-                });
+            // Résztvevő hozzáadása az eseményhez
+            eventsRef.child(notification.getEventId())
+                    .child("participants")
+                    .child(mAuth.getCurrentUser().getUid())
+                    .setValue(true);
+        } else {
+            // Módosítási/törlési értesítés megjelölése olvasottként és törlése
+            markAsRead(notification);
+        }
     }
 
     private void declineInvitation(EventNotification notification) {
@@ -111,5 +112,14 @@ public class NotificationsActivity extends AppCompatActivity {
                 .child(notification.getNotificationId())
                 .child("status")
                 .setValue("declined");
+    }
+
+    private void markAsRead(EventNotification notification) {
+        notificationsRef.child(mAuth.getCurrentUser().getUid())
+                .child(notification.getNotificationId())
+                .removeValue()
+                .addOnSuccessListener(aVoid -> {
+                    adapter.removeNotification(notification);
+                });
     }
 }

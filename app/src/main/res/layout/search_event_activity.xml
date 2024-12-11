@@ -66,7 +66,7 @@
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Search Event"
+                        android:hint="Event Name"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -149,45 +149,35 @@
                         </com.google.android.material.chip.ChipGroup>
                     </HorizontalScrollView>
 
-                    <LinearLayout
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_date_filter"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginTop="16dp">
+                        android:text="Select Date"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginBottom="8dp"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_date_filter"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Select Date"
-                            android:layout_marginEnd="8dp"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_sort"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Sort By"
-                            android:layout_marginStart="8dp"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
-
-                    </LinearLayout>
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_sort"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Sort By"
+                        android:layout_marginBottom="16dp"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
 
                     <com.google.android.material.switchmaterial.SwitchMaterial
                         android:id="@+id/switch_available_only"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Show only available events"
-                        android:layout_marginTop="16dp"/>
+                        android:layout_marginBottom="16dp"/>
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_show_results"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Show Results"
-                        android:layout_marginTop="16dp"
                         style="@style/SportButton"
                         app:backgroundTint="@color/primaryColor"/>
 

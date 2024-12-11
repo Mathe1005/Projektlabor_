@@ -80,7 +80,8 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
     }
 
     public void updateEvents(List<EventActivity.Event> newEvents) {
-        this.eventList = newEvents;
+        this.eventList.clear();
+        this.eventList.addAll(newEvents);
         notifyDataSetChanged();
     }
 }

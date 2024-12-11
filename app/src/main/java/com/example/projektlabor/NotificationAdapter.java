@@ -40,30 +40,91 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         return notifications.size();
     }
 
+    public void removeNotification(EventNotification notification) {
+        int position = notifications.indexOf(notification);
+        if (position != -1) {
+            notifications.remove(position);
+            notifyItemRemoved(position);
+        }
+    }
+
     class NotificationViewHolder extends RecyclerView.ViewHolder {
         private TextView messageText;
         private MaterialButton acceptButton;
         private MaterialButton declineButton;
+        private MaterialButton okButton;
 
         NotificationViewHolder(@NonNull View itemView) {
             super(itemView);
             messageText = itemView.findViewById(R.id.text_notification_message);
             acceptButton = itemView.findViewById(R.id.button_accept);
             declineButton = itemView.findViewById(R.id.button_decline);
+            okButton = itemView.findViewById(R.id.button_ok);
         }
 
         void bind(EventNotification notification) {
-            String message = String.format("%s has invited you to join '%s'",
-                    notification.getSenderName(), notification.getEventName());
-            messageText.setText(message);
+            String message;
+            switch (notification.getNotificationType()) {
+                case "modified":
+                case "cancelled":
+                case "date_changed":
+                case "location_changed":
+                case "time_changed":
+                    message = getUpdateMessage(notification);
+                    messageText.setText(message);
+                    acceptButton.setVisibility(View.GONE);
+                    declineButton.setVisibility(View.GONE);
+                    okButton.setVisibility(View.VISIBLE);
+                    okButton.setOnClickListener(v -> {
+                        if (listener != null) {
+                            listener.onNotificationAction(notification, true);
+                        }
+                    });
+                    break;
 
-            acceptButton.setOnClickListener(v -> {
-                listener.onNotificationAction(notification, true);
-            });
+                default:
+                    message = String.format("%s has invited you to join '%s'",
+                            notification.getSenderName(), notification.getEventName());
+                    messageText.setText(message);
+                    acceptButton.setVisibility(View.VISIBLE);
+                    declineButton.setVisibility(View.VISIBLE);
+                    okButton.setVisibility(View.GONE);
 
-            declineButton.setOnClickListener(v -> {
-                listener.onNotificationAction(notification, false);
-            });
+                    acceptButton.setOnClickListener(v -> {
+                        if (listener != null) {
+                            listener.onNotificationAction(notification, true);
+                        }
+                    });
+
+                    declineButton.setOnClickListener(v -> {
+                        if (listener != null) {
+                            listener.onNotificationAction(notification, false);
+                        }
+                    });
+                    break;
+            }
+        }
+
+        private String getUpdateMessage(EventNotification notification) {
+            switch (notification.getNotificationType()) {
+                case "modified":
+                    return String.format("%s has modified the event '%s'",
+                            notification.getSenderName(), notification.getEventName());
+                case "cancelled":
+                    return String.format("Event '%s' has been cancelled by %s",
+                            notification.getEventName(), notification.getSenderName());
+                case "date_changed":
+                    return String.format("The date of event '%s' has been changed by %s",
+                            notification.getEventName(), notification.getSenderName());
+                case "location_changed":
+                    return String.format("The location of event '%s' has been changed by %s",
+                            notification.getEventName(), notification.getSenderName());
+                case "time_changed":
+                    return String.format("The start time of event '%s' has been changed by %s",
+                            notification.getEventName(), notification.getSenderName());
+                default:
+                    return "";
+            }
         }
     }
 }

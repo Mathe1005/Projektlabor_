@@ -37,7 +37,11 @@ public class HomeActivity extends AppCompatActivity {
     private List<EventActivity.Event> userEventList;
     private List<EventActivity.Event> otherEventList;
     private DatabaseReference mDatabase;
+    private DatabaseReference notificationsRef;
+    private DatabaseReference friendRequestsRef;
     private FirebaseAuth mAuth;
+    private TextView notificationsBadge;
+    private TextView friendsBadge;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,11 +50,14 @@ public class HomeActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference("events");
+        notificationsRef = FirebaseDatabase.getInstance().getReference("notifications");
+        friendRequestsRef = FirebaseDatabase.getInstance().getReference("friendRequests");
 
         initializeViews();
         setupEventLists();
         setupBottomNavigation();
         loadEvents();
+        setupBadgeListeners();
     }
 
     private void initializeViews() {
@@ -64,9 +71,75 @@ public class HomeActivity extends AppCompatActivity {
         recyclerViewOtherEvents = findViewById(R.id.recycler_view_other_events);
         recyclerViewUserEvents.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewOtherEvents.setLayoutManager(new LinearLayoutManager(this));
+
+        notificationsBadge = findViewById(R.id.notifications_badge);
+        friendsBadge = findViewById(R.id.friends_badge);
     }
 
+    private void setupBadgeListeners() {
+        String userId = mAuth.getCurrentUser().getUid();
 
+        // Értesítések figyelése
+        notificationsRef.child(userId)
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        long count = 0;
+                        for (DataSnapshot notifSnapshot : snapshot.getChildren()) {
+                            EventNotification notification = notifSnapshot.getValue(EventNotification.class);
+                            if (notification != null) {
+                                // Számoljuk a pending meghívókat és az olvasatlan értesítéseket
+                                if (notification.getStatus().equals("pending") ||
+                                        notification.getStatus().equals("unread")) {
+                                    count++;
+                                }
+                            }
+                        }
+                        updateNotificationBadge(count);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
+
+        // Barát kérelmek figyelése (ez marad változatlan)
+        friendRequestsRef.orderByChild("receiverId")
+                .equalTo(userId)
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        long count = 0;
+                        for (DataSnapshot requestSnapshot : snapshot.getChildren()) {
+                            FriendRequest request = requestSnapshot.getValue(FriendRequest.class);
+                            if (request != null && request.getStatus().equals("pending")) {
+                                count++;
+                            }
+                        }
+                        updateFriendBadge(count);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
+    }
+
+    private void updateNotificationBadge(long count) {
+        if (count > 0) {
+            notificationsBadge.setVisibility(View.VISIBLE);
+            notificationsBadge.setText(String.valueOf(count));
+        } else {
+            notificationsBadge.setVisibility(View.GONE);
+        }
+    }
+
+    private void updateFriendBadge(long count) {
+        if (count > 0) {
+            friendsBadge.setVisibility(View.VISIBLE);
+            friendsBadge.setText(String.valueOf(count));
+        } else {
+            friendsBadge.setVisibility(View.GONE);
+        }
+    }
 
     private void setupBottomNavigation() {
         LinearLayout navHome = findViewById(R.id.nav_home);
@@ -96,7 +169,6 @@ public class HomeActivity extends AppCompatActivity {
         recyclerViewOtherEvents.setAdapter(otherEventAdapter);
     }
 
-
     private void showEventDetails(EventActivity.Event event) {
         Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.dialog_event_details);
@@ -121,7 +193,6 @@ public class HomeActivity extends AppCompatActivity {
 
         dialog.show();
     }
-
 
     private void loadEvents() {
         mDatabase.addValueEventListener(new ValueEventListener() {
@@ -208,8 +279,4 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
     }
-
-
-
-
 }

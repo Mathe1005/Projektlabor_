@@ -34,12 +34,10 @@ public class InviteFriendsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_invite_friends);
 
-        // Inicializáljuk a Firebase referenciákat
         mAuth = FirebaseAuth.getInstance();
         usersRef = FirebaseDatabase.getInstance().getReference("users");
         notificationsRef = FirebaseDatabase.getInstance().getReference("notifications");
 
-        // Az eventId-t megkapjuk az Intent-ből
         eventId = getIntent().getStringExtra("EVENT_ID");
         if (eventId == null) {
             Toast.makeText(this, "Error: No event ID provided", Toast.LENGTH_SHORT).show();
@@ -47,7 +45,6 @@ public class InviteFriendsActivity extends AppCompatActivity {
             return;
         }
 
-        // Betöltjük az aktuális esemény adatait
         FirebaseDatabase.getInstance().getReference("events").child(eventId)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override

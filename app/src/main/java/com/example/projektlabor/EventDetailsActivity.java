@@ -207,7 +207,7 @@ public class EventDetailsActivity extends AppCompatActivity {
             for (String participantId : currentEvent.participants.keySet()) {
                 NotificationService.sendEventUpdateNotification(
                         EventDetailsActivity.this,
-                        currentEvent.eventName,
+                        currentEvent,
                         "cancelled"
                 );
             }

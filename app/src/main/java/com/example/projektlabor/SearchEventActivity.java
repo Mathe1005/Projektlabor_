@@ -21,6 +21,8 @@ import com.google.firebase.database.*;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class SearchEventActivity extends AppCompatActivity {
@@ -35,6 +37,7 @@ public class SearchEventActivity extends AppCompatActivity {
     private SwitchMaterial switchAvailableOnly;
     private String selectedDate = "";
     private MaterialButton btnShowResults;
+    private String currentSortOption = "Date"; // Alapértelmezett rendezés
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +63,8 @@ public class SearchEventActivity extends AppCompatActivity {
         backButton.setOnClickListener(v -> finish());
         btnShowResults = findViewById(R.id.btn_show_results);
         btnShowResults.setOnClickListener(v -> showFilteredResults());
+
+        btnSort.setText("Sort By: " + currentSortOption);
     }
 
     private void setupListeners() {
@@ -72,41 +77,43 @@ public class SearchEventActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
-                // Nincs szükség azonnali szűrésre, csak amikor a Show Results gombra kattintanak
+                // Valós idejű keresés nem szükséges, a Show Results gomb kezeli
             }
-
         });
 
         filterChipGroup.setOnCheckedChangeListener((group, checkedId) -> {
-            // Nincs szükség azonnali szűrésre
+            // Chip kiválasztás kezelése a Show Results gombra lett áthelyezve
         });
 
         btnDateFilter.setOnClickListener(v -> showDatePicker());
 
         switchAvailableOnly.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            // Nincs szükség azonnali szűrésre
+            // Switch állapot változás kezelése a Show Results gombra lett áthelyezve
         });
 
-        btnSort.setOnClickListener(v -> {
-            String[] sortOptions = {"Date", "Name", "Sport Category"};
-            new MaterialAlertDialogBuilder(this)
-                    .setTitle("Sort By")
-                    .setItems(sortOptions, (dialog, which) -> {
-                        // Mentsük el a kiválasztott rendezési opciót
-                        switch (which) {
-                            case 0:
-                                btnSort.setText("Sort By: Date");
-                                break;
-                            case 1:
-                                btnSort.setText("Sort By: Name");
-                                break;
-                            case 2:
-                                btnSort.setText("Sort By: Sport Category");
-                                break;
-                        }
-                    })
-                    .show();
-        });
+        btnSort.setOnClickListener(v -> showSortDialog());
+    }
+
+    private void showSortDialog() {
+        String[] sortOptions = {"Date", "Name", "Sport Category", "Available Spots"};
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Sort By")
+                .setSingleChoiceItems(sortOptions, getSortOptionIndex(currentSortOption), (dialog, which) -> {
+                    currentSortOption = sortOptions[which];
+                    btnSort.setText("Sort By: " + currentSortOption);
+                    dialog.dismiss();
+                })
+                .show();
+    }
+
+    private int getSortOptionIndex(String option) {
+        switch (option) {
+            case "Date": return 0;
+            case "Name": return 1;
+            case "Sport Category": return 2;
+            case "Available Spots": return 3;
+            default: return 0;
+        }
     }
 
     private void loadAllEvents() {
@@ -143,20 +150,49 @@ public class SearchEventActivity extends AppCompatActivity {
                 cal.get(Calendar.MONTH),
                 cal.get(Calendar.DAY_OF_MONTH)
         );
+        datePickerDialog.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
         datePickerDialog.show();
     }
 
     private void showFilteredResults() {
         Intent intent = new Intent(this, FilteredEventsActivity.class);
-        intent.putExtra("searchQuery", editTextSearch.getText().toString());
 
+        // Keresési szöveg
+        intent.putExtra("searchQuery", editTextSearch.getText().toString().toLowerCase());
+
+        // Sport kategória
         Chip selectedChip = findViewById(filterChipGroup.getCheckedChipId());
         String sportCategory = selectedChip != null ? selectedChip.getText().toString() : "All";
         intent.putExtra("selectedSport", sportCategory);
 
+        // Dátum és elérhetőség
         intent.putExtra("selectedDate", selectedDate);
         intent.putExtra("showOnlyAvailable", switchAvailableOnly.isChecked());
 
+        // Rendezési beállítás
+        intent.putExtra("sortOption", currentSortOption);
+
         startActivity(intent);
+    }
+
+    private void sortEvents(List<EventActivity.Event> events) {
+        switch (currentSortOption) {
+            case "Date":
+                Collections.sort(events, (e1, e2) -> e1.eventTime.compareTo(e2.eventTime));
+                break;
+            case "Name":
+                Collections.sort(events, (e1, e2) -> e1.eventName.compareTo(e2.eventName));
+                break;
+            case "Sport Category":
+                Collections.sort(events, (e1, e2) -> e1.sportCategory.compareTo(e2.sportCategory));
+                break;
+            case "Available Sports":
+                Collections.sort(events, (e1, e2) -> {
+                    int spots1 = e1.maxParticipants - (e1.participants != null ? e1.participants.size() : 0);
+                    int spots2 = e2.maxParticipants - (e2.participants != null ? e2.participants.size() : 0);
+                    return spots2 - spots1; // Csökkenő sorrend (több szabad hely előre)
+                });
+                break;
+        }
     }
 }

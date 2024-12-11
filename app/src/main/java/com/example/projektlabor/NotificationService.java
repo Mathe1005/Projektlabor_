@@ -9,6 +9,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import androidx.core.app.NotificationCompat;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -32,12 +34,10 @@ public class NotificationService extends BroadcastReceiver {
 
     public static void scheduleEventNotification(Context context, EventActivity.Event event) {
         try {
-            // Esemény időpontja
             String dateTimeString = event.eventTime + " " + event.startTime;
             Date eventDateTime = dateTimeFormat.parse(dateTimeString);
 
             if (eventDateTime != null) {
-                // Esemény előtt 1 órával
                 Calendar notificationTime = Calendar.getInstance();
                 notificationTime.setTime(eventDateTime);
                 notificationTime.add(Calendar.HOUR_OF_DAY, -1);
@@ -70,12 +70,33 @@ public class NotificationService extends BroadcastReceiver {
         }
     }
 
-    public static void sendEventUpdateNotification(Context context, String eventName, String updateType) {
-        createNotification(
-                context,
-                "Event Update",
-                getNotificationMessage(updateType, eventName)
-        );
+    public static void sendEventUpdateNotification(Context context, EventActivity.Event event, String updateType) {
+        String message = getNotificationMessage(updateType, event.eventName);
+        createNotification(context, "Event Update", message);
+
+        if (event.participants != null && !event.participants.isEmpty()) {
+            DatabaseReference notificationsRef = FirebaseDatabase.getInstance().getReference("notifications");
+
+            for (String participantId : event.participants.keySet()) {
+                String notificationId = notificationsRef.child(participantId).push().getKey();
+                if (notificationId != null) {
+                    EventNotification notification = new EventNotification(
+                            notificationId,
+                            event.eventId,
+                            event.creatorId,
+                            event.creatorUsername,
+                            participantId,
+                            event.eventName,
+                            updateType
+                    );
+
+                    notification.setStatus("unread");
+                    notificationsRef.child(participantId)
+                            .child(notificationId)
+                            .setValue(notification);
+                }
+            }
+        }
     }
 
     private static String getNotificationMessage(String type, String eventName) {
@@ -86,6 +107,12 @@ public class NotificationService extends BroadcastReceiver {
                 return "The event '" + eventName + "' has been modified by the organizer.";
             case "cancelled":
                 return "The event '" + eventName + "' has been cancelled by the organizer.";
+            case "date_changed":
+                return "The date of event '" + eventName + "' has been changed by the organizer.";
+            case "location_changed":
+                return "The location of event '" + eventName + "' has been changed by the organizer.";
+            case "time_changed":
+                return "The start time of event '" + eventName + "' has been changed by the organizer.";
             default:
                 return "Update regarding event '" + eventName + "'";
         }

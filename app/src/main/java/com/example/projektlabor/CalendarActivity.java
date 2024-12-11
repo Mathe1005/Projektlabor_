@@ -9,6 +9,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.*;
 
@@ -20,10 +22,13 @@ public class CalendarActivity extends AppCompatActivity {
 
     private CalendarView calendarView;
     private ImageView backButton;
+    private RecyclerView recyclerViewEvents;
+    private EventAdapter eventAdapter;
     private DatabaseReference eventsRef;
     private FirebaseAuth mAuth;
     private Map<String, List<EventActivity.Event>> eventsByDate;
     private SimpleDateFormat dateFormat;
+    private List<EventActivity.Event> selectedDateEvents;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,17 +48,42 @@ public class CalendarActivity extends AppCompatActivity {
         eventsRef = FirebaseDatabase.getInstance().getReference("events");
         eventsByDate = new HashMap<>();
         dateFormat = new SimpleDateFormat("yyyy.MM.dd", Locale.getDefault());
+        selectedDateEvents = new ArrayList<>();
 
         calendarView = findViewById(R.id.calendar_view);
         backButton = findViewById(R.id.back_button);
+        recyclerViewEvents = findViewById(R.id.recycler_view_calendar_events);
+
+        recyclerViewEvents.setLayoutManager(new LinearLayoutManager(this));
+        eventAdapter = new EventAdapter(selectedDateEvents, this);
+        recyclerViewEvents.setAdapter(eventAdapter);
+
         backButton.setOnClickListener(v -> onBackPressed());
     }
 
     private void setupCalendar() {
         calendarView.setOnDateChangeListener((view, year, month, dayOfMonth) -> {
             String dateString = String.format(Locale.getDefault(), "%d.%02d.%02d", year, month + 1, dayOfMonth);
-            showEventsForDate(dateString);
+            updateEventsForDate(dateString);
         });
+    }
+
+    private void updateEventsForDate(String date) {
+        selectedDateEvents.clear();
+        List<EventActivity.Event> events = eventsByDate.get(date);
+        if (events != null && !events.isEmpty()) {
+            selectedDateEvents.addAll(events);
+        }
+        eventAdapter.notifyDataSetChanged();
+
+        // Update the visibility of the RecyclerView and empty state
+        if (selectedDateEvents.isEmpty()) {
+            recyclerViewEvents.setVisibility(View.GONE);
+            findViewById(R.id.text_no_events).setVisibility(View.VISIBLE);
+        } else {
+            recyclerViewEvents.setVisibility(View.VISIBLE);
+            findViewById(R.id.text_no_events).setVisibility(View.GONE);
+        }
     }
 
     private void loadEvents() {
@@ -74,8 +104,13 @@ public class CalendarActivity extends AppCompatActivity {
                     }
                 }
 
-                // Frissítjük a naptár megjelenését
+                // Update calendar decorations for dates with events
                 updateCalendarDecorations();
+
+                // Update events for current selected date
+                Calendar cal = Calendar.getInstance();
+                String currentDate = dateFormat.format(cal.getTime());
+                updateEventsForDate(currentDate);
             }
 
             @Override
@@ -87,23 +122,11 @@ public class CalendarActivity extends AppCompatActivity {
         });
     }
 
-    private void showEventsForDate(String date) {
-        List<EventActivity.Event> events = eventsByDate.get(date);
-        if (events != null && !events.isEmpty()) {
-            StringBuilder message = new StringBuilder("Events on this day:\n\n");
-            for (EventActivity.Event event : events) {
-                message.append("• ").append(event.eventName)
-                        .append(" at ").append(event.startTime)
-                        .append("\n");
-            }
-            Toast.makeText(this, message.toString(), Toast.LENGTH_LONG).show();
-        } else {
-            Toast.makeText(this, "No events on this day", Toast.LENGTH_SHORT).show();
-        }
-    }
-
     private void updateCalendarDecorations() {
-        // Itt lehetne implementálni a napok vizuális dekorációját
-        // például különböző színekkel jelölni azokat a napokat, ahol van esemény
+        // Sajnos az Android alapértelmezett CalendarView nem támogatja a napok egyedi dekorálását
+        // Alternatív megoldásként használhatnánk külső könyvtárat (pl. MaterialCalendarView)
+        // vagy készíthetnénk saját naptár nézetet
+
+        // Egyelőre csak a kiválasztott napra mutatjuk az eseményeket a RecyclerView-ban
     }
 }

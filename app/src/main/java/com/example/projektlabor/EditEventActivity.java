@@ -24,7 +24,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 public class EditEventActivity extends AppCompatActivity {
 
@@ -146,8 +148,6 @@ public class EditEventActivity extends AppCompatActivity {
         });
     }
 
-    // Az updateEvent() metódusban módosítani kell az Event objektum létrehozását:
-
     private void updateEvent() {
         if (currentEvent == null) {
             Toast.makeText(this, "Error: Event data not loaded", Toast.LENGTH_SHORT).show();
@@ -210,6 +210,24 @@ public class EditEventActivity extends AppCompatActivity {
             return;
         }
 
+        // Ellenőrizzük, hogy mi változott
+        List<String> changes = new ArrayList<>();
+        if (!currentEvent.eventTime.equals(newTime)) {
+            changes.add("date_changed");
+        }
+        if (!currentEvent.eventLocation.equals(newLocation)) {
+            changes.add("location_changed");
+        }
+        if (!currentEvent.startTime.equals(newStartTime)) {
+            changes.add("time_changed");
+        }
+        if (!currentEvent.eventName.equals(newName) ||
+                !currentEvent.sportCategory.equals(newSportCategory) ||
+                !currentEvent.description.equals(newDescription) ||
+                currentEvent.maxParticipants != newMaxParticipants) {
+            changes.add("modified");
+        }
+
         // Az új konstruktor használata, megtartva az eredeti isPrivate értéket
         EventActivity.Event updatedEvent = new EventActivity.Event(
                 eventId,
@@ -222,7 +240,7 @@ public class EditEventActivity extends AppCompatActivity {
                 newMaxParticipants,
                 newDescription,
                 newStartTime,
-                currentEvent.isPrivate  // megtartjuk az eredeti isPrivate értéket
+                currentEvent.isPrivate
         );
 
         // Megtartjuk a jelenlegi résztvevőket és meghívottakat
@@ -231,13 +249,13 @@ public class EditEventActivity extends AppCompatActivity {
 
         mDatabase.child(eventId).setValue(updatedEvent).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
-                // Értesítjük a résztvevőket a módosításról
+                // Értesítjük a résztvevőket minden változásról
                 if (currentEvent.participants != null) {
-                    for (String participantId : currentEvent.participants.keySet()) {
+                    for (String changeType : changes) {
                         NotificationService.sendEventUpdateNotification(
                                 EditEventActivity.this,
-                                updatedEvent.eventName,
-                                "modified"
+                                updatedEvent,
+                                changeType
                         );
                     }
                 }
